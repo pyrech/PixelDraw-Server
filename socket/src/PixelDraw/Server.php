@@ -42,13 +42,13 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
             $this->rooms[$room->getId()] = $room;
             $player->joinRoom($room);
             $conn->callResult($id, array('room_id'   => $room->getId(),
-                                         'room_name' => $room->getName());
+                                         'room_name' => $room->getName()));
             break;
 
           case "join_room":
             $this->leaveCurrentRoom($player);
             if (! $this->assertParams($params, array('room_id'), $conn, $id, $topic)) return;
-            if (! $this->assertRoomExists($params['room_id']), $conn, $id, $topic) return;
+            if (! $this->assertRoomExists($params['room_id'], $conn, $id, $topic)) return;
             $room = $this->getRoom($params['room_id']);
             if ($room->isFull()) {
               $this->log('Room full', $player);
