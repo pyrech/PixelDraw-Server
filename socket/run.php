@@ -6,7 +6,7 @@ use Ratchet\WebSocket\WsServer;
 
 require __DIR__ . '/vendor/autoload.php';
 
-$pd_server = new PixelDrawer\Server();
+$pd_server = new PixelDraw\Server();
 
 $server = IoServer::factory(
     new WsServer(
