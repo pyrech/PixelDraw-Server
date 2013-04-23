@@ -4,7 +4,7 @@ namespace PixelDraw;
 
 use Ratchet\ConnectionInterface as Conn;
 
-class Server implements Ratchet\Wamp\WampServerInterface {
+class Server implements \Ratchet\Wamp\WampServerInterface {
 
     protected $rooms = array();
     protected $players = array();
