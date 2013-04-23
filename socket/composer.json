@@ -1,0 +1,13 @@
+{
+    "name": "Pyrech/PixelDraw-Server",
+    "version": "0.0.1",
+    "autoload": {
+        "psr-0": {
+            "PixelDraw": "src/"
+        }
+    }
+    "require": {
+        "cboden/Ratchet": "0.2.*"
+    },
+    "minimum-stability": "dev"
+}

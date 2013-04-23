@@ -1,0 +1,12 @@
+# Sublim Text project files
+sftp-config.json
+*.sublime-project
+*.sublime-workspace
+
+# Mac file
+.DS_Store
+*.swp
+*.lock
+profile
+
+admin/*

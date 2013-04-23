@@ -1,0 +1,91 @@
+
+<!DOCTYPE html>
+<head>
+   <link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.no-icons.min.css" rel="stylesheet">
+   <script src="http://autobahn.s3.amazonaws.com/js/autobahn.min.js"></script>
+   <script type="text/javascript">
+      var sess = null;// WAMP session object
+      // WAMP session was established
+      window.onload = function() {
+         ab.connect("ws://88.191.157.29:8080",
+         function (session) {
+            sess = session;
+            console.log("Connected!");
+            sess.prefix("event", "http://88.191.157.29:8080/events");
+            sess.prefix("call", "http://88.191.157.29:8080/call");
+            sess.subscribe("event:firstevent", onEvent);
+            sess.subscribe("event:secondevent", onEvent);
+         },    
+         function (code, reason) {
+            console.log("connexion closed");
+         });
+      };
+
+      function onEvent(topicUri, event) {
+         console.log("omagad");
+         console.log(topicUri);
+         console.log(event);
+      }
+
+      function log_call_result(arg) {
+         console.log(arg);
+         console.log("plop");
+      }
+
+      function callFunction (x) {
+         if (sess != null) {
+            console.log("call sent");
+            sess.call("servertime", x).then(log_call_result, log_call_result);
+         }
+         else {console.log("nope, server off")}
+      }
+      function publishEvent() {
+         evt = {};
+       
+         evt.name = document.getElementById('form_message').value;
+         evt.flag = document.getElementById('form_flag').checked;
+       
+         evt.num = 23;
+         evt.created = new Date();
+         evt.rand = Math.random();
+       
+         var excludeMe = false;
+       
+         if (document.getElementById('event1').checked) {
+            sess.publish("event:firstevent", evt, excludeMe);
+         } else {
+            sess.publish("event:secondevent", evt, excludeMe);
+         }
+      }
+
+   </script>
+</head>
+<body>
+   <div class="container">
+      <br>
+      <div class="well">
+         <h4>pub/sub to #call</h4>
+         <button onclick="sess.subscribe('http://example.com/simple', onEvent);">Subscribe</button>
+         <button onclick="sess.unsubscribe('http://example.com/simple');">Unsubscribe</button>
+         <button onclick="sess.publish('http://example.com/simple', null);">Push</button>
+      </div>
+
+      <div class="well">
+         <h4>pub/sub to #firstevent, #secondevent</h4>
+         <form>
+            <p>Message: <input id="form_message" type="text" size="50" maxlength="50" value="Hello, world!"></p>
+            <p>Flag: <input id="form_flag" type="checkbox"></p>
+            <p>Event:
+            <input id="event1" type="radio" name="eventtype" checked="">firstevent
+            <input type="radio" name="eventtype">secondevent
+            </p>
+         </form>
+         <button onclick="publishEvent()">Push message</button>
+      </div>
+      <div class="well">
+         <h4> RPC #servertime </h4>
+         <button onclick="callFunction(55)">Test RPC</button>
+      </div>
+   </div>
+
+</body>
