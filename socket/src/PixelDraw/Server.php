@@ -8,74 +8,63 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
 
     protected $rooms = array();
     protected $players = array();
-    protected $room_lookup = array();
 
     public function onPublish(Conn $conn, $topic, $event, array $exclude, array $eligible) {
-        $this->log('onPublish '.$topic->getId(), $conn);
+        $this->log('onPublish '.$topic->getId(), $this->getPlayer($conn));
         var_dump($event);
-
         $topic->broadcast($event);
     }
 
     public function onCall(Conn $conn, $id, $topic, array $params) {
-        $this->log('onCall '.$topic->getId(), $conn);
+        $player = $this->getPlayer($conn);
+        $this->log('onCall '.$topic->getId(), $player);
         //var_dump($params);
         switch($topic->getId()) {
           case "connection":
-            $required = array('name');
-            if (! $this->checkParams($params, $required)) {
-              $this->log('Missing required params ('.join(', ', $required).')', $conn);
-              $conn->callError($id, $topic, 'Missing required params ('.join(', ', $required).')');
-              return;
-            }
-            $this->players[$this->getPlayerId($conn)]['name'] = $params['name'];
+            $player->leaveRoom();
+            if (! $this->assertParams($params, array('name'), $conn, $id, $topic)) return;
+            $player->setName($params['names']);
             $conn->callResult($id, array('result' => 'ok'));
             break;
+
           case "get_room_list":
             $rooms = array();
-            foreach ($this->rooms as $key => $value) {
-              $rooms[] = array_merge(array('room_id' => $key), $value);
+            foreach ($this->rooms as $room) {
+              $rooms[] = $room->asItemList();
             }
             $conn->callResult($id, array('rooms' => $rooms));
             break;
+
           case "create_room":
-            $this->leaveCurrentRoom($conn);
-            $required = array('room_name');
-            if (! $this->checkParams($params, $required)) {
-              $this->log('Missing required params ('.join(', ', $required).')', $conn);
-              $conn->callError($id, $topic, 'Missing required params ('.join(', ', $required).')');
-              return;
-            }
-            $room_id = uniqid();
-            $this->rooms[$room_id] = array('name' => $params['room_name'],
-                                           'count_player' => 0,
-                                           'max_player' => 5,
-                                           'creator' => $this->getPlayerId($conn));
-            if ($this->isRoomFull($room_id)) {
-              $this->log('Room full', $conn);
+            $this->leaveCurrentRoom($player);
+            if (! $this->assertParams($params, array('room_name'), $conn, $id, $topic)) return;
+            $room = new Room($params['room_name'], $this->getPlayerId($conn));
+            $this->rooms[$room->getId()] = $room;
+            $player->joinRoom($room);
+            $conn->callResult($id, array('room_id'   => $room->getId(),
+                                         'room_name' => $room->getName());
+            break;
+
+          case "join_room":
+            $this->leaveCurrentRoom($player);
+            if (! $this->assertParams($params, array('room_id'), $conn, $id, $topic)) return;
+            if (! $this->assertRoomExists($params['room_id']), $conn, $id, $topic) return;
+            $room = $this->getRoom($params['room_id']);
+            if ($room->isFull()) {
+              $this->log('Room full', $player);
               $conn->callError($id, $topic, 'Room full');
               return;
             }
-            $this->joinRoom($conn, $room_id);
-            $conn->callResult($id, array('room_id' => $room_id,
-                                         'room_name' => $params['room_name']));
-            break;
-          case "join_room":
-            $this->leaveCurrentRoom($conn);
-            $required = array('room_id');
-            if (! $this->checkParams($params, $required)) {
-              $this->log('Missing required params ('.join(', ', $required).')', $conn);
-              $conn->callError($id, $topic, 'Missing required params ('.join(', ', $required.')'));
-              return;
-            }
-            if (! $this->roomExists($params['room_id'])) {
-              $conn->callError($id, $topic, 'Invalid room id');
-              return;
-            }
-            $this->joinRoom($conn, $params['room_id']);
-            $conn->callResult($id, array('room_id' => $params['room_id'],
+            $player->joinRoom($room);
+            $conn->callResult($id, array('room_id' => $room->getId(),
                                          'result' => 'ok'));
             break;
+
+          case "quit_room":
+            $this->leaveCurrentRoom($player);
+            $conn->callResult($id, array('result' => 'ok'));
+            break;
+
           default:
             $conn->callError($id, $topic, 'method not supported');
             break;
@@ -86,68 +75,87 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
     public function onSubscribe(Conn $conn, $topic) {}
     public function onUnSubscribe(Conn $conn, $topic) {}
 
+    // Socket connection
     public function onOpen(Conn $conn) {
-      $this->players[$this->getPlayerId($conn)] = array();
-      $this->log('onOpen', $conn);
+      $player = new Player($this->getPlayerId($conn));
+      $this->players[$player->getId()] = $player;
+      $this->log('onOpen', $player);
     }
     public function onClose(Conn $conn) {
-      $this->log('onClose', $conn);
+      $player = $this->getPlayer($conn);
+      $this->log('onClose', $player);
       $this->leaveCurrentRoom($conn);
-      unset($this->players[$this->getPlayerId($conn)]);
+      unset($this->players[$player->id]);
     }
     public function onError(Conn $conn, \Exception $e) {}
-    public function roomExists($room_id) {
-      return array_key_exists($room_id, $this->rooms);
-    }
-    public function checkParams($params, $required) {
+
+    // Assert methods (send callError if check failed)
+    public function assertParams($params, $required, $conn, $id, $topic) {
       foreach ($required as $key) {
         if (! array_key_exists($key, $params)) {
+          $this->log('Missing required params ('.$key.')', $conn);
+          $conn->callError($id, $topic, 'Missing required params ('.$key.')');
           return false;
         }
       }
       return true;
     }
+    public function assertRoomExists($room_id, $conn, $id, $topic) {
+      if (! $this->roomExists($params['room_id'])) {
+        $this->log('Invalid room id', $conn);
+        $conn->callError($id, $topic, 'Invalid room id');
+        return false;
+      }
+      return true;
+    }
+
+    public function roomExists($room_id) {
+      return array_key_exists($room_id, $this->rooms);
+    }
+
+    // Methods to get player_id, Player object or Room object
     public function getPlayerId(Conn $conn) {
       return $conn->WAMP->sessionId;
     }
-    public function joinRoom(Conn $conn, $room_id) {
-      $this->room_lookup[$this->getPlayerId($conn)] = $room_id;
-      $this->rooms[$room_id]['count_player']++;
+    public function getPlayer(Conn $conn) {
+      $player_id = $this->getPlayerId($conn);
+      if (array_key_exists($player_id, $this->players)) {
+        return $this->players[$player_id];
+      }
+      $this->log('Invalid player ('.$player_id.')');
+      return null;
     }
-    public function leaveCurrentRoom(Conn $conn) {
-      if (array_key_exists($this->getPlayerId($conn), $this->room_lookup)
-        && ($room_id = $this->room_lookup[$this->getPlayerId($conn)])
-        && $this->roomExists($room_id)) {
-        unset($this->room_lookup[$this->getPlayerId($conn)]);
-        $this->rooms[$room_id]['count_player']--;
-        if ($this->rooms[$room_id]['count_player'] < 1) {
-          unset($this->rooms[$room_id]);
-        }
+    public function getRoom($room_id) {
+      if (array_key_exists($room_id, $this->rooms)) {
+        return $this->rooms[$room_id];
+      }
+      $this->log('Invalid room ('.$room_id.')');
+      return null;
+    }
+
+    // Leave a player from a room and update this player and room
+    public function leaveCurrentRoom(Player $player) {
+      $room = $player->getRoom();
+      $player->leaveRoom();
+      // If room empty, delete it
+      if ($room->countPlayers() < 1) {
+        unset($this->rooms[$room->getId()]);
       }
     }
-    public function isRoomFull($room_id) {
-      //if ($this->roomExists($room_id)
-       //   &&)
-      return false;
-    }
-    public function log($msg, $conn = null) {
+
+    public function log($msg, $player = null) {
       $str = '['.date('d-m-Y H:i:s').'] ';
-      if ($conn) {
-        $str .= 'Player '.$this->getPlayerId($conn);
-        if (array_key_exists('name', $this->players[$this->getPlayerId($conn)])) {
-          $str .= ' ('.$this->players[$this->getPlayerId($conn)]['name'].')';
-        }
-        $str .= ' - ';
+      if ($player) {
+        $str .= 'Player '.$player->toString().' - ';
       }
       echo $str, $msg, "\n";
     }
+
+    // Mainly use for tests
     public function populate() {
       for($i=0;$i<10;$i++) {
-        $room_id = uniqid();
-        $this->rooms[$room_id] = array('name' => 'LOLILOL',
-                                       'count_player' => 0,
-                                       'max_player' => 5,
-                                       'creator' => 0);
+        $room = new Room('room '.$i, 0);
+        $this->rooms[$room->getId()] = $room;
       }
     }
 }
