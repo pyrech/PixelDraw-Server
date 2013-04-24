@@ -32,6 +32,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
         foreach($required as $key) {
           if (!array_key_exists($key, $event)) {
             $this->log('Missing event key ('.$key.')', $player);
+            return;
           }
         }
         switch($event['type']) {
