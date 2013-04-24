@@ -65,4 +65,8 @@ class Room {
     return $str;
   }
 
+  public function isInRoom(Player $player) {
+    return array_key_exists($player->getId(), $this->players)
+  }
+
 }

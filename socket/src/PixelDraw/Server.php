@@ -11,6 +11,18 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
 
     public function onPublish(Conn $conn, $topic, $event, array $exclude, array $eligible) {
         $this->log('onPublish '.$topic->getId(), $conn);
+        if (!$this->roomExists($topic->getId())) {
+          $this->log('Invalid topic '.$room->toString(), $player);
+          $conn->send('Invalid topic'.$room->toString());
+          return;
+        }
+        $player = $this->getCurrentPlayer($conn);
+        $room = $this->getRoom($conn);
+        if (!$player->isInRoom($room)) {
+          $this->log('Publish forbidden '.$room->toString(), $player);
+          $conn->send('Publish forbidden'.$room->toString());
+          return;
+        }
         var_dump($event);
         $topic->broadcast($event);
     }
@@ -42,7 +54,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
 
           case "get_info_room":
             if (! $this->assertParams($params, array('room_id'), $conn, $id, $topic)) return;
-            if (! $this->assertPlayerExists($params['room_id'], $conn, $id, $topic)) return;
+            if (! $this->assertRoomExists($params['room_id'], $conn, $id, $topic)) return;
             $room = $this->getRoom($params['room_id']);
             $result['room'] = $room->asItemHash();
             $result['result'] = 'ok';

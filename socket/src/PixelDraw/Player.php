@@ -65,4 +65,11 @@ class Player {
     return $result;
   }
 
+  public function isInRoom($room_id) {
+    if ($room_id instanceof Room) {
+      $room_id = $room_id->getId();
+    }
+    return $this->room->getId() == $room_id;
+  }
+
 }
