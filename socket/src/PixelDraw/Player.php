@@ -34,7 +34,7 @@ class Player {
       return;
     }
     $this->room = $room;
-    $room->addPlayer();
+    $room->addPlayer($this);
   }
 
   public function leaveRoom() {

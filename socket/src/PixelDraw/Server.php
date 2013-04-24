@@ -17,6 +17,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
 
     public function onCall(Conn $conn, $id, $topic, array $params) {
         $player = $this->getPlayer($conn);
+        $result = array('method' => $topic->getId());
         $this->log('onCall '.$topic->getId(), $player);
         //var_dump($params);
         switch($topic->getId()) {
@@ -24,15 +25,16 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
             $player->leaveRoom();
             if (! $this->assertParams($params, array('name'), $conn, $id, $topic)) return;
             $player->setName($params['name']);
-            $conn->callResult($id, array('result' => 'ok'));
+            $result['result'] = 'ok';
+            $conn->callResult($id, $result);
             break;
 
           case "get_room_list":
-            $rooms = array();
+            $result['rooms'] = array();
             foreach ($this->rooms as $room) {
-              $rooms[] = $room->asItemList();
+              $result['rooms'][] = $room->asItemList();
             }
-            $conn->callResult($id, array('rooms' => $rooms));
+            $conn->callResult($id, $result);
             break;
 
           case "create_room":
@@ -41,8 +43,9 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
             $room = new Room($params['room_name'], $this->getPlayerId($conn));
             $this->rooms[$room->getId()] = $room;
             $player->joinRoom($room);
-            $conn->callResult($id, array('room_id'   => $room->getId(),
-                                         'room_name' => $room->getName()));
+            $result['room_id'] = $room->getId();
+            $result['room_name'] = $room->getId();
+            $conn->callResult($id, $result);
             break;
 
           case "join_room":
@@ -56,17 +59,19 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
               return;
             }
             $player->joinRoom($room);
-            $conn->callResult($id, array('room_id' => $room->getId(),
-                                         'result' => 'ok'));
+            $result['room_id'] = $room->getId();
+            $result['result'] = 'ok';
+            $conn->callResult($id, $result);
             break;
 
           case "quit_room":
             $this->leaveCurrentRoom($player);
-            $conn->callResult($id, array('result' => 'ok'));
+            $result['result'] = 'ok';
+            $conn->callResult($id, $result);
             break;
 
           default:
-            $conn->callError($id, $topic, 'method not supported');
+            $conn->callError($id, $topic, 'method ('.$result['method'].') not supported');
             break;
         }
     }

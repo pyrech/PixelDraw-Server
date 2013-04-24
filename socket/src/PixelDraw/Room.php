@@ -18,8 +18,8 @@ class Room {
   }
 
   public function asItemList() {
-    return array('room_id'      => $this->room_id,
-                 'room_name'    => $this->room_name,
+    return array('room_id'      => $this->id,
+                 'room_name'    => $this->name,
                  'count_player' => $this->countPlayers(),
                  'max_player'   => $this->max_player,
                  'creator'      => $this->creator);
