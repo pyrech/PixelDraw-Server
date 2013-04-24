@@ -137,6 +137,24 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
             $conn->callResult($id, $result);
             break;
 
+          case "get_categories":
+            $result['categories'] = Words::collectCategories($this->database, 3);
+            $result['result'] = 'ok';
+            $conn->callResult($id, $result);
+            break;
+
+          case "get_word":
+            if (! $this->assertParams($params, array('category_id'), $conn, $id, $topic)) return;
+            if (! $this->assertCategoryExists($params['category_id'], $conn, $id, $topic)) return;
+            if (! $this->assertPlayerInRoom($player, $conn, $id, $topic)) return;
+            if (! $this->assertPlayerIsDrawer($player, $conn, $id, $topic)) return;
+            $result['word'] = Words::getRandomWord($this->database, $params['category_id']);
+            $result['result'] = 'ok';
+            $room = $player->getRoom();
+            $room->setWordId($result['word']['id']);
+            $conn->callResult($id, $result);
+            break;
+
           default:
             $this->log('method ('.$result['method'].') not supported', $player);
             $conn->callError($id, $topic, 'method ('.$result['method'].') not supported');
@@ -197,6 +215,32 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
       if (! $this->playerExists($player_id)) {
         $this->log('Invalid player id ('.$player_id.')');
         $conn->callError($id, $topic, 'Invalid player id ('.$player_id.')');
+        return false;
+      }
+      return true;
+    }
+    public function assertCategoryExists($category_id, $conn, $id, $topic) {
+      if (! Words::existsCategory($this->database, $category_id)) {
+        $this->log('Invalid category id ('.$category_id.')');
+        $conn->callError($id, $topic, 'Invalid category id ('.$category_id.')');
+        return false;
+      }
+      return true;
+    }
+    public function assertPlayerInRoom(Player $player, $conn, $id, $topic) {
+      $room = $player->getRoom();
+      if ($room == null || !$this->roomExists($room->getId())) {
+        $this->log('Player should be in a room', $player);
+        $conn->callError($id, $topic, 'Player should be in a room');
+        return false;
+      }
+      return true;
+    }
+    public function assertPlayerIsDrawer(Player $player, $conn, $id, $topic) {
+      $room = $player->getRoom();
+      if (!$room->isDrawer($player)) {
+        $this->log('Forbidden : the player is not the drawer', $player);
+        $conn->callError($id, $topic, 'Forbidden : the player is not the drawer');
         return false;
       }
       return true;

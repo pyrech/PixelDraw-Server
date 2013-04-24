@@ -7,6 +7,7 @@ class Player {
 
   private $id = 0;
   private $name = "";
+  private $score = 0;
   private $room = null;
 
   public function __construct($id) {
@@ -55,7 +56,8 @@ class Player {
 
   public function asItemHash() {
     $result = array('id'      => $this->id,
-                    'name'    => $this->name);
+                    'name'    => $this->name),
+                    'score'   => $this->score);
     if ($this->room != NULL) {
       $result['room_id'] = $this->room->getId();
     }
