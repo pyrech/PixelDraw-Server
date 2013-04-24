@@ -98,8 +98,10 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
         }
     }
 
-    // No need to anything, since WampServer adds and removes subscribers to Topics automatically
-    public function onSubscribe(Conn $conn, $topic) {}
+    // Gestion of subscriptions
+    public function onSubscribe(Conn $conn, $topic) {
+      if ()
+    }
     public function onUnSubscribe(Conn $conn, $topic) {}
 
     // Socket connection
@@ -153,7 +155,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
 
     // Methods to get player_id, Player object or Room object
     public function getCurrentPlayerId(Conn $conn) {
-      return $conn->WAMP->sessionId;
+      return 'player-'.$conn->WAMP->sessionId;
     }
     public function getCurrentPlayer(Conn $conn) {
       return $this->getPlayer($this->getCurrentPlayerId($conn));

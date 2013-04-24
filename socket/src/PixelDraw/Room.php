@@ -12,7 +12,7 @@ class Room {
   private $players = array();
 
   public function __construct($name, $player_id) {
-    $this->id = uniqid();
+    $this->id = uniqid('room-');
     $this->name = $name;
     $this->admin_id = $player_id;
   }
