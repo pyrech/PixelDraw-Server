@@ -22,10 +22,16 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
           //$conn->send('Invalid topic ('.$topic->getId().')');
           return;
         }
+        var_dump($event);
         $room = $this->getRoom($topic->getId());
         if (!$player->isInRoom($room)) {
           $this->log('Publish forbidden '.$room->toString(), $player);
           //$conn->send('Publish forbidden'.$room->toString());
+          return;
+        }
+        if (!is_array($event)) {
+          $this->log('Invalid event data received. Should be a PHP array.', $player);
+          //$conn->send('Invalid event data received. You must send an object.');
           return;
         }
         $required = array('type', 'event');
@@ -50,7 +56,6 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
           case self::EVENT_DRAW :
             break;
         }
-        var_dump($event);
         $topic->broadcast($event);
     }
 
