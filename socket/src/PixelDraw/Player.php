@@ -38,8 +38,10 @@ class Player {
   }
 
   public function leaveRoom() {
-    $this->room->removePlayer($this);
-    unset($this->room);
+    if ($room != NULL) {
+      $this->room->removePlayer($this);
+      unset($this->room);
+    }
   }
 
   public function toString() {
