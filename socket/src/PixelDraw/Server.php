@@ -105,7 +105,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
       // Player must be in the room
       if ($player->getRoom()->getId() != $topic->getId()) {
         $topic->remove($conn);
-        $conn
+        // send a message to client ?
         return;
       }
     }
