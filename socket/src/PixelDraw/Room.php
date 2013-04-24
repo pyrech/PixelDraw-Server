@@ -27,12 +27,18 @@ class Room {
 
   public function addPlayer(Player $player) {
     $player->joinRoom($this);
+    if ($this->creator == 0) {
+      $this->creator = $player->getId();
+    }
     $this->players[$player->getId()] = $player;
   }
 
   public function removePlayer(Player $player) {
     if (array_key_exists($player->getId(), $this->players)) {
       unset($this->players[$player->getId()]);
+    }
+    if ($this->creator == $player->getId()) {
+      $this->creator = reset($this->players);
     }
   }
 
