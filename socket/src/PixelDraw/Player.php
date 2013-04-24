@@ -43,7 +43,7 @@ class Player {
   }
 
   public function toString() {
-    $str = ''.$player->getId();
+    $str = ''.$this->id;
     if (strlen($this->name) > 0) {
       $str .= ' ('.$this->name.')';
     }
