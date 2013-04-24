@@ -9,5 +9,5 @@ sftp-config.json
 *.lock
 profile
 
-admin/*
-conf/*
+socket/admin/*
+socket/conf/*
