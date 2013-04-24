@@ -12,8 +12,8 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
     public function onPublish(Conn $conn, $topic, $event, array $exclude, array $eligible) {
         $this->log('onPublish '.$topic->getId(), $conn);
         if (!$this->roomExists($topic->getId())) {
-          $this->log('Invalid topic '.$room->toString(), $player);
-          $conn->send('Invalid topic'.$room->toString());
+          $this->log('Invalid topic '.$topic->getId(), $player);
+          $conn->send('Invalid topic'.$topic->getId());
           return;
         }
         $player = $this->getCurrentPlayer($conn);
