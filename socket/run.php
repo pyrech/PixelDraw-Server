@@ -15,7 +15,7 @@ $user = PD_DB_LOGIN;
 $password = PD_DB_PASSWORD;
 try {
   $pdo = new \PDO($dsn, $user, $password, array(\PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8'));
-  $pd_server->setDatabase($dbo);
+  $pd_server->setDatabase($pdo);
 }
 catch (\Exception $e) {
   $pd_server->log('Can\' connect to database');
