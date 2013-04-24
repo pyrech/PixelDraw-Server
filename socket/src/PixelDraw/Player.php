@@ -7,7 +7,7 @@ class Player {
 
   private $id = 0;
   private $name = "";
-  private $room = 0;
+  private $room = null;
 
   public function __construct($id) {
     $this->id = $id;
@@ -41,7 +41,7 @@ class Player {
   public function leaveRoom() {
     if ($this->room != NULL) {
       $this->room->removePlayer($this);
-      unset($this->room);
+      $this->room == NULL;
     }
   }
 
