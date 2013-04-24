@@ -8,26 +8,26 @@ class Room {
   private $id = 0;
   private $name = "";
   private $max_player = 5;
-  private $creator = 0;
+  private $admin_id = 0;
   private $players = array();
 
   public function __construct($name, $player_id) {
     $this->id = uniqid();
     $this->name = $name;
-    $this->creator = $player_id;
+    $this->admin_id = $player_id;
   }
 
   public function asItemHash() {
-    return array('room_id'      => $this->id,
-                 'room_name'    => $this->name,
+    return array('id'           => $this->id,
+                 'name'         => $this->name,
                  'count_player' => $this->countPlayers(),
                  'max_player'   => $this->max_player,
-                 'creator'      => $this->creator);
+                 'admin_id'   => $this->admin_id);
   }
 
   public function addPlayer(Player $player) {
-    if ($this->creator == 0) {
-      $this->creator = $player->getId();
+    if ($this->admin_id == 0) {
+      $this->admin_id = $player->getId();
     }
     $this->players[$player->getId()] = $player;
   }
@@ -36,8 +36,8 @@ class Room {
     if (array_key_exists($player->getId(), $this->players)) {
       unset($this->players[$player->getId()]);
     }
-    if ($this->creator == $player->getId()) {
-      $this->creator = reset($this->players);
+    if ($this->admin_id == $player->getId()) {
+      $this->admin_id = reset($this->players);
     }
   }
 

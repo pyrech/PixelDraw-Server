@@ -34,7 +34,17 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
           case "get_info_player":
             if (! $this->assertParams($params, array('player_id'), $conn, $id, $topic)) return;
             if (! $this->assertPlayerExists($params['player_id'], $conn, $id, $topic)) return;
-            $result['player'] = $player->asItemHash();
+            $player_ = $this->getPlayer($params['player_id']);
+            $result['player'] = $player_->asItemHash();
+            $result['result'] = 'ok';
+            $conn->callResult($id, $result);
+            break;
+
+          case "get_info_room":
+            if (! $this->assertParams($params, array('room_id'), $conn, $id, $topic)) return;
+            if (! $this->assertPlayerExists($params['room_id'], $conn, $id, $topic)) return;
+            $room = $this->getRoom($params['room_id']);
+            $result['room'] = $room->asItemHash();
             $result['result'] = 'ok';
             $conn->callResult($id, $result);
             break;
@@ -44,6 +54,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
             foreach ($this->rooms as $room) {
               $result['rooms'][] = $room->asItemHash();
             }
+            $result['result'] = 'ok';
             $conn->callResult($id, $result);
             break;
 
@@ -53,8 +64,8 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
             $room = new Room($params['room_name'], $player->getId());
             $this->rooms[$room->getId()] = $room;
             $player->joinRoom($room);
-            $result['room_id'] = $room->getId();
-            $result['room_name'] = $room->getId();
+            $result['room'] = $room->asItemHash();
+            $result['result'] = 'ok';
             $conn->callResult($id, $result);
             break;
 
@@ -69,12 +80,12 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
               return;
             }
             $player->joinRoom($room);
-            $result['room_id'] = $room->getId();
+            $result['room'] = $room->asItemHash();
             $result['result'] = 'ok';
             $conn->callResult($id, $result);
             break;
 
-          case "quit_room":
+          case "leave_room":
             $this->leaveCurrentRoom($player);
             $result['result'] = 'ok';
             $conn->callResult($id, $result);
