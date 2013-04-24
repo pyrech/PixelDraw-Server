@@ -22,7 +22,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
         //var_dump($params);
         switch($topic->getId()) {
           case "login":
-            $player->leaveRoom();
+            $this->leaveCurrentRoom($player);
             if (! $this->assertParams($params, array('name'), $conn, $id, $topic)) return;
             $this->log('login '.$player->getName().' -> '.$params['name']);
             $player->setName($params['name']);
@@ -63,6 +63,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
             if (! $this->assertParams($params, array('room_name'), $conn, $id, $topic)) return;
             $room = new Room($params['room_name'], $player->getId());
             $this->rooms[$room->getId()] = $room;
+            $this->log('Create room '.$room->toString(), $player);
             $player->joinRoom($room);
             $result['room'] = $room->asItemHash();
             $result['result'] = 'ok';
@@ -100,8 +101,15 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
 
     // Gestion of subscriptions
     public function onSubscribe(Conn $conn, $topic) {
-      if ()
+      $player = $this->getCurrentPlayer($conn);
+      // Player must be in the room
+      if ($player->getRoom()->getId() != $topic->getId()) {
+        $topic->remove($conn);
+        $conn
+        return;
+      }
     }
+
     public function onUnSubscribe(Conn $conn, $topic) {}
 
     // Socket connection
@@ -116,7 +124,9 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
       $this->leaveCurrentRoom($player);
       unset($this->players[$player->getId()]);
     }
-    public function onError(Conn $conn, \Exception $e) {}
+    public function onError(Conn $conn, \Exception $e) {
+      $conn->close();
+    }
 
     // Assert methods (send callError if check failed)
     public function assertParams($params, $required, $conn, $id, $topic) {
