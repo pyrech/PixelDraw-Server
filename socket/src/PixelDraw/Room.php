@@ -26,7 +26,6 @@ class Room {
   }
 
   public function addPlayer(Player $player) {
-    $player->joinRoom($this);
     if ($this->creator == 0) {
       $this->creator = $player->getId();
     }
