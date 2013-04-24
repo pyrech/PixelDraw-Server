@@ -21,9 +21,10 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
         $this->log('onCall '.$topic->getId(), $player);
         //var_dump($params);
         switch($topic->getId()) {
-          case "connection":
+          case "login":
             $player->leaveRoom();
             if (! $this->assertParams($params, array('name'), $conn, $id, $topic)) return;
+            $this->log('login '.$player->getName().' -> '.$params['name']);
             $player->setName($params['name']);
             $result['result'] = 'ok';
             $conn->callResult($id, $result);
@@ -71,6 +72,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
             break;
 
           default:
+            $this->log('method ('.$result['method'].') not supported', $player);
             $conn->callError($id, $topic, 'method ('.$result['method'].') not supported');
             break;
         }

@@ -11,6 +11,7 @@ class Player {
 
   public function __construct($id) {
     $this->id = $id;
+    $this->name = 'guest_'.substr(''.$id, -8);
   }
 
   public function getId() {
