@@ -38,7 +38,7 @@ class Player {
   }
 
   public function leaveRoom() {
-    if ($room != NULL) {
+    if ($this->room != NULL) {
       $this->room->removePlayer($this);
       unset($this->room);
     }
