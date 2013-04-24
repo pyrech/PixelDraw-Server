@@ -17,7 +17,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
           return;
         }
         $player = $this->getCurrentPlayer($conn);
-        $room = $this->getRoom($conn);
+        $room = $this->getRoom($topic->getId());
         if (!$player->isInRoom($room)) {
           $this->log('Publish forbidden '.$room->toString(), $player);
           $conn->send('Publish forbidden'.$room->toString());
