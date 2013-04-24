@@ -5,6 +5,14 @@ namespace PixelDraw;
 
 class Room {
 
+  const STATE_WAITING_ROOM    = 1;
+  const STATE_DRAWER_CHOOSING = 2;
+  const STATE_IN_GAME         = 3;
+
+  public static $states = array(self::STATE_WAITING_ROOM    => "waiting room",
+                                self::STATE_DRAWER_CHOOSING => "drawer choosing",
+                                self::STATE_IN_GAME         => "in game");
+
   private $id = 0;
   private $name = "";
   private $state = 0;
@@ -18,6 +26,7 @@ class Room {
     $this->id = uniqid('room-');
     $this->name = $name;
     $this->admin_id = $player_id;
+    $this->state = self::STATE_WAITING_ROOM;
   }
 
   public function asItemHash() {
@@ -83,6 +92,16 @@ class Room {
     }
     $this->drawer_id = $drawer_id;
   }
+
+  public function setState($state) {
+    $this->state = $state;
+  }
+
+  public function getState() {
+    return $this->state;
+  }
+
+
 
   public function toString() {
     $str = ''.$this->id;
