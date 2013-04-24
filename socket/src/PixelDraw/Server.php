@@ -6,6 +6,11 @@ use Ratchet\ConnectionInterface as Conn;
 
 class Server implements \Ratchet\Wamp\WampServerInterface {
 
+    const EVENT_PLAYER = 0;
+    const EVENT_SERVER = 1;
+    const EVENT_ROOM   = 2;
+    const EVENT_DRAW   = 3;
+
     protected $rooms = array();
     protected $players = array();
 
@@ -13,15 +18,36 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
         $this->log('onPublish '.$topic->getId(), $conn);
         $player = $this->getCurrentPlayer($conn);
         if (!$this->roomExists($topic->getId())) {
-          $this->log('Invalid topic '.$topic->getId(), $player);
-          $conn->send('Invalid topic'.$topic->getId());
+          $this->log('Invalid topic ('.$topic->getId().')', $player);
+          //$conn->send('Invalid topic ('.$topic->getId().')');
           return;
         }
         $room = $this->getRoom($topic->getId());
         if (!$player->isInRoom($room)) {
           $this->log('Publish forbidden '.$room->toString(), $player);
-          $conn->send('Publish forbidden'.$room->toString());
+          //$conn->send('Publish forbidden'.$room->toString());
           return;
+        }
+        $required = array('type', 'event');
+        foreach($required as $key) {
+          if (!array_key_exists($key, $event)) {
+            $this->log('Missing event key ('.$key.')', $player);
+          }
+        }
+        switch($event['type']) {
+          case self::EVENT_PLAYER :
+            $event['event']['msg'] = $event['event']['msg'] .' OK SERVEUR';
+            break;
+
+          case self::EVENT_SERVER :
+            $event['event']['msg'] = $event['event']['msg'] .' OK SERVEUR';
+            break;
+
+          case self::EVENT_ROOM :
+            break;
+
+          case self::EVENT_DRAW :
+            break;
         }
         var_dump($event);
         $topic->broadcast($event);
