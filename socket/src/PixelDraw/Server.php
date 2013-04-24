@@ -11,12 +11,12 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
 
     public function onPublish(Conn $conn, $topic, $event, array $exclude, array $eligible) {
         $this->log('onPublish '.$topic->getId(), $conn);
+        $player = $this->getCurrentPlayer($conn);
         if (!$this->roomExists($topic->getId())) {
           $this->log('Invalid topic '.$topic->getId(), $player);
           $conn->send('Invalid topic'.$topic->getId());
           return;
         }
-        $player = $this->getCurrentPlayer($conn);
         $room = $this->getRoom($topic->getId());
         if (!$player->isInRoom($room)) {
           $this->log('Publish forbidden '.$room->toString(), $player);
