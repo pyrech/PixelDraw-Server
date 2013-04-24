@@ -161,7 +161,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
             if (! $this->assertCategoryExists($params['category_id'], $conn, $id, $topic)) return;
             if (! $this->assertPlayerInRoom($player, $conn, $id, $topic)) return;
             if (! $this->assertPlayerIsDrawer($player, $conn, $id, $topic)) return;
-            $room = $player->getRoom():
+            $room = $player->getRoom();
             if (! $this->assertRoomState(Room::STATE_DRAWER_CHOOSING, $room, $conn, $id, $topic)) return;
             $result['word'] = Words::getRandomWord($this->database, $params['category_id']);
             $result['result'] = 'ok';
