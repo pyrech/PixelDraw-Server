@@ -103,7 +103,8 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
     public function onSubscribe(Conn $conn, $topic) {
       $player = $this->getCurrentPlayer($conn);
       // Player must be in the room
-      if ($player->getRoom()->getId() != $topic->getId()) {
+      $room = $player->getRoom();
+      if (!$room || $room->getId() != $topic->getId()) {
         $topic->remove($conn);
         // send a message to client ?
         return;
