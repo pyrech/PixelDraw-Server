@@ -47,7 +47,7 @@ class Player {
     if (strlen($this->name) > 0) {
       $str .= ' ('.$this->name.')';
     }
-    return $str
+    return $str;
   }
 
 }
