@@ -29,6 +29,10 @@ class Room {
                  'admin_id'     => $this->admin_id);
   }
 
+  public function getPlayers() {
+    return $this->players;
+  }
+
   public function addPlayer(Player $player) {
     if ($this->admin_id == 0) {
       $this->admin_id = $player->getId();
