@@ -23,7 +23,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
           case "connection":
             $player->leaveRoom();
             if (! $this->assertParams($params, array('name'), $conn, $id, $topic)) return;
-            $player->setName($params['names']);
+            $player->setName($params['name']);
             $conn->callResult($id, array('result' => 'ok'));
             break;
 
