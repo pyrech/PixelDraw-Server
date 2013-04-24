@@ -85,7 +85,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
       $player = $this->getPlayer($conn);
       $this->log('onClose', $player);
       $this->leaveCurrentRoom($player);
-      unset($this->players[$player->id]);
+      unset($this->players[$player->getId()]);
     }
     public function onError(Conn $conn, \Exception $e) {}
 
