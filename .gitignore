@@ -11,3 +11,4 @@ profile
 
 socket/admin/*
 socket/conf/*
+socket/vendor/*
