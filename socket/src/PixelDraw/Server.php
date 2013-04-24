@@ -138,7 +138,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
       $room = $player->getRoom();
       $player->leaveRoom();
       // If room empty, delete it
-      if ($room->countPlayers() < 1) {
+      if ($room != null && $room->countPlayers() < 1) {
         unset($this->rooms[$room->getId()]);
       }
     }
