@@ -57,4 +57,12 @@ class Room {
     return $this->name;
   }
 
+  public function toString() {
+    $str = ''.$this->id;
+    if (strlen($this->name) > 0) {
+      $str .= ' ('.$this->name.')';
+    }
+    return $str;
+  }
+
 }

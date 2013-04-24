@@ -53,4 +53,10 @@ class Player {
     return $str;
   }
 
+  public function asItemList() {
+    return array('id'      => $this->id,
+                 'name'    => $this->name,
+                 'room_id' => $this->room->getId());
+  }
+
 }

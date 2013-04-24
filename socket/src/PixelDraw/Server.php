@@ -10,13 +10,13 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
     protected $players = array();
 
     public function onPublish(Conn $conn, $topic, $event, array $exclude, array $eligible) {
-        $this->log('onPublish '.$topic->getId(), $this->getPlayer($conn));
+        $this->log('onPublish '.$topic->getId(), $conn);
         var_dump($event);
         $topic->broadcast($event);
     }
 
     public function onCall(Conn $conn, $id, $topic, array $params) {
-        $player = $this->getPlayer($conn);
+        $player = $this->getCurrentPlayer($conn);
         $result = array('method' => $topic->getId());
         $this->log('onCall '.$topic->getId(), $player);
         //var_dump($params);
@@ -26,6 +26,15 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
             if (! $this->assertParams($params, array('name'), $conn, $id, $topic)) return;
             $this->log('login '.$player->getName().' -> '.$params['name']);
             $player->setName($params['name']);
+            $result['player_id'] = $player->getId();
+            $result['result'] = 'ok';
+            $conn->callResult($id, $result);
+            break;
+
+          case "get_info_player":
+            if (! $this->assertParams($params, array('id'), $conn, $id, $topic)) return;
+            if (! $this->assertPlayerExists($params['id'], $conn, $id, $topic)) return;
+            $result['player'] = $player->asItemList();
             $result['result'] = 'ok';
             $conn->callResult($id, $result);
             break;
@@ -41,7 +50,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
           case "create_room":
             $this->leaveCurrentRoom($player);
             if (! $this->assertParams($params, array('room_name'), $conn, $id, $topic)) return;
-            $room = new Room($params['room_name'], $this->getPlayerId($conn));
+            $room = new Room($params['room_name'], $player->getId());
             $this->rooms[$room->getId()] = $room;
             $player->joinRoom($room);
             $result['room_id'] = $room->getId();
@@ -84,12 +93,12 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
 
     // Socket connection
     public function onOpen(Conn $conn) {
-      $player = new Player($this->getPlayerId($conn));
+      $player = new Player($this->getCurrentPlayerId($conn));
       $this->players[$player->getId()] = $player;
       $this->log('onOpen', $player);
     }
     public function onClose(Conn $conn) {
-      $player = $this->getPlayer($conn);
+      $player = $this->getCurrentPlayer($conn);
       $this->log('onClose', $player);
       $this->leaveCurrentRoom($player);
       unset($this->players[$player->getId()]);
@@ -115,17 +124,30 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
       }
       return true;
     }
+    public function assertPlayerExists($player_id, $conn, $id, $topic) {
+      if (! $this->playerExists($player_id)) {
+        $this->log('Invalid player id');
+        $conn->callError($id, $topic, 'Invalid player id');
+        return false;
+      }
+      return true;
+    }
 
     public function roomExists($room_id) {
       return array_key_exists($room_id, $this->rooms);
     }
+    public function playerExists($player_id) {
+      return array_key_exists($player_id, $this->players);
+    }
 
     // Methods to get player_id, Player object or Room object
-    public function getPlayerId(Conn $conn) {
+    public function getCurrentPlayerId(Conn $conn) {
       return $conn->WAMP->sessionId;
     }
-    public function getPlayer(Conn $conn) {
-      $player_id = $this->getPlayerId($conn);
+    public function getCurrentPlayer(Conn $conn) {
+      return $this->getPlayer($this->getCurrentPlayerId($conn));
+    }
+    public function getPlayer($player_id) {
       if (array_key_exists($player_id, $this->players)) {
         return $this->players[$player_id];
       }
@@ -152,6 +174,9 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
 
     public function log($msg, $player = null) {
       $str = '['.date('d-m-Y H:i:s').'] ';
+      if ($player instanceof Conn) {
+        $player = $this->getCurrentPlayer($player);
+      }
       if ($player instanceof Player) {
         $str .= 'Player '.$player->toString().' - ';
       }
