@@ -145,7 +145,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
 
     public function log($msg, $player = null) {
       $str = '['.date('d-m-Y H:i:s').'] ';
-      if ($player) {
+      if ($player instanceof Player) {
         $str .= 'Player '.$player->toString().' - ';
       }
       echo $str, $msg, "\n";
