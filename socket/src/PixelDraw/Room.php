@@ -17,7 +17,7 @@ class Room {
     $this->creator = $player_id;
   }
 
-  public function asItemList() {
+  public function asItemHash() {
     return array('room_id'      => $this->id,
                  'room_name'    => $this->name,
                  'count_player' => $this->countPlayers(),

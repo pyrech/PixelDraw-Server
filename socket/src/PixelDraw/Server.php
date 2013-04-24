@@ -32,9 +32,9 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
             break;
 
           case "get_info_player":
-            if (! $this->assertParams($params, array('id'), $conn, $id, $topic)) return;
-            if (! $this->assertPlayerExists($params['id'], $conn, $id, $topic)) return;
-            $result['player'] = $player->asItemList();
+            if (! $this->assertParams($params, array('player_id'), $conn, $id, $topic)) return;
+            if (! $this->assertPlayerExists($params['player_id'], $conn, $id, $topic)) return;
+            $result['player'] = $player->asItemHash();
             $result['result'] = 'ok';
             $conn->callResult($id, $result);
             break;
@@ -42,7 +42,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
           case "get_room_list":
             $result['rooms'] = array();
             foreach ($this->rooms as $room) {
-              $result['rooms'][] = $room->asItemList();
+              $result['rooms'][] = $room->asItemHash();
             }
             $conn->callResult($id, $result);
             break;

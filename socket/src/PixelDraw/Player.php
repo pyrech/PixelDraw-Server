@@ -53,10 +53,16 @@ class Player {
     return $str;
   }
 
-  public function asItemList() {
-    return array('id'      => $this->id,
-                 'name'    => $this->name,
-                 'room_id' => $this->room->getId());
+  public function asItemHash() {
+    $result = array('id'      => $this->id,
+                    'name'    => $this->name);
+    if ($this->room != NULL) {
+      $result['room_id'] = $this->room->getId();
+    }
+    else {
+      $result['room_id'] = 0;
+    }
+    return $result
   }
 
 }
