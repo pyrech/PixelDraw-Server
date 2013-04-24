@@ -108,7 +108,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
       return true;
     }
     public function assertRoomExists($room_id, $conn, $id, $topic) {
-      if (! $this->roomExists($params['room_id'])) {
+      if (! $this->roomExists($room_id)) {
         $this->log('Invalid room id', $conn);
         $conn->callError($id, $topic, 'Invalid room id');
         return false;
