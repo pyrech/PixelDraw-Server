@@ -11,6 +11,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
     const EVENT_ROOM   = 2;
     const EVENT_DRAW   = 3;
 
+    protected $database = null;
     protected $rooms = array();
     protected $players = array();
 
@@ -228,6 +229,10 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
       }
       $this->log('Invalid room ('.$room_id.')');
       return null;
+    }
+
+    public function setDatabase($db) {
+      $this->database = $db;
     }
 
     // Leave a player from a room and update this player and room
