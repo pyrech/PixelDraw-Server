@@ -62,7 +62,7 @@ class Player {
     else {
       $result['room_id'] = 0;
     }
-    return $result
+    return $result;
   }
 
 }
