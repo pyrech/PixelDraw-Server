@@ -11,7 +11,7 @@ class Room {
   private $creator = 0;
   private $players = array();
 
-  public function Room($name, $player_id) {
+  public function __construct($name, $player_id) {
     $this->id = uniqid();
     $this->name = $name;
     $this->creator = $player_id;

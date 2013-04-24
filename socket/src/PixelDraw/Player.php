@@ -9,7 +9,7 @@ class Player {
   private $name = "";
   private $room = 0;
 
-  public function Player($id) {
+  public function __construct($id) {
     $this->id = $id;
   }
 
