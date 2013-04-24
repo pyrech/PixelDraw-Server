@@ -26,7 +26,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
             if (! $this->assertParams($params, array('name'), $conn, $id, $topic)) return;
             $this->log('login '.$player->getName().' -> '.$params['name']);
             $player->setName($params['name']);
-            $result['player_id'] = $player->getId();
+            $result['player'] = $player->asItemHash();
             $result['result'] = 'ok';
             $conn->callResult($id, $result);
             break;
@@ -118,16 +118,16 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
     }
     public function assertRoomExists($room_id, $conn, $id, $topic) {
       if (! $this->roomExists($room_id)) {
-        $this->log('Invalid room id', $conn);
-        $conn->callError($id, $topic, 'Invalid room id');
+        $this->log('Invalid room id ('.$room_id.')', $conn);
+        $conn->callError($id, $topic, 'Invalid room id ('.$room_id.')');
         return false;
       }
       return true;
     }
     public function assertPlayerExists($player_id, $conn, $id, $topic) {
       if (! $this->playerExists($player_id)) {
-        $this->log('Invalid player id');
-        $conn->callError($id, $topic, 'Invalid player id');
+        $this->log('Invalid player id ('.$player_id.')');
+        $conn->callError($id, $topic, 'Invalid player id ('.$player_id.')');
         return false;
       }
       return true;
