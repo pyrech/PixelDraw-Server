@@ -318,7 +318,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
         $player = $this->getCurrentPlayer($player);
       }
       if ($player instanceof Player) {
-        $str .= 'Player '.$player->toString().' - ';
+        $str .= $player->toString().' - ';
       }
       if (!is_string($msg)) {
         $msg = var_export($msg, true);
