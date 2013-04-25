@@ -10,7 +10,7 @@ require PD_SOCKET_ROOT . '/conf/log.php';
 require PD_SOCKET_ROOT . '/conf/database.php';
 require PD_SOCKET_ROOT . '/vendor/autoload.php';
 
-system("tail -f PD_LOG_FILE");
+system('tail -f '.PD_LOG_FILE);
 
 $pd_server = new PixelDraw\Server();
 
