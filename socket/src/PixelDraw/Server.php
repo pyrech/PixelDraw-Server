@@ -116,11 +116,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
             if (! $this->assertParams($params, array('room_id'), $conn, $id, $topic)) return;
             if (! $this->assertRoomExists($params['room_id'], $conn, $id, $topic)) return;
             $room = $this->getRoom($params['room_id']);
-            $players = array();
-            foreach ($room->getPlayers() as $player) {
-              $players[] = $player->asItemHash();
-            }
-            $result['players'] = $players;
+            $result['players'] = $this->getPlayersAsHash($room);
             $result['result'] = 'ok';
             $conn->callResult($id, $result);
             break;
@@ -159,6 +155,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
             }
             $player->joinRoom($room);
             $result['room'] = $room->asItemHash();
+            $result['players'] = $this->getPlayersAsHash($room);
             $result['result'] = 'ok';
             $conn->callResult($id, $result);
             $this->launchServerEvent($room, $player->getName().' join room.');
@@ -318,6 +315,13 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
       $this->log('Invalid room ('.$room_id.')');
       return null;
     }
+    public function getPlayersAsHash(Room $room) {
+      $players = array();
+      foreach ($room->getPlayers() as $player) {
+        $players[] = $player->asItemHash();
+      }
+      return $players;
+    }
 
     public function setDatabase($db) {
       $this->database = $db;
@@ -339,13 +343,9 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
     }
 
     protected function launchRoomEvent(Room $room) {
-      $players = array();
-      foreach ($room->getPlayers() as $player) {
-        $players[] = $player->asItemHash();
-      }
       $event = array('type'  => self::EVENT_ROOM,
                      'event' => array('room'    => $room->asItemHash(),
-                                      'players' => $players));
+                                      'players' => $this->getPlayersAsHash($room)));
       $this->log('launch room event');
       $this->broadcast($room, $event);
     }
