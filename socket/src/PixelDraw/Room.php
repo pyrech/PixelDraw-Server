@@ -76,7 +76,7 @@ class Room {
       $cur = array_search($this->drawer_id, $players_id);
       if (empty($cur) || $cur == $count-1) {
         reset($players_id);
-        $drawer_id = current($this->players)->getId();
+        $drawer_id = current($players_id);
       }
       else {
         $drawer_id = $players_id[$cur+1];
