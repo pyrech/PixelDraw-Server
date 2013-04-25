@@ -351,7 +351,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
     }
 
     protected function launchServerEvent(Room $room, $msg) {
-      $event = array('type'  => self::EVENT_ROOM,
+      $event = array('type'  => self::EVENT_SERVER,
                      'event' => array('msg' => $msg));
       $this->log('launch server event ('.$msg.')');
       $this->broadcast($room, $event);
