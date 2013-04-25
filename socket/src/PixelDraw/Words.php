@@ -16,6 +16,7 @@ class Words {
     if (empty(self::$query_collect)) {
       self::$query_collect = $pdo->prepare('SELECT * FROM category LIMIT '.intval($limit).' ORDER BY RAND( )');
     }
+    error_log(var_export(self::$query_collect->queryString, true));
     self::$query_collect->execute();
     $res = array();
     foreach (self::$query_collect->fetchAll() as $row) {
@@ -27,7 +28,7 @@ class Words {
       }
       $res[] = $hash;
     }
-    error_log(var_export($res));
+    error_log(var_export($res, true));
     return $res;
   }
 
@@ -51,7 +52,7 @@ class Words {
         $res[$key] = $value;
       }
     }
-    error_log(var_export($res));
+    error_log(var_export($res, true));
     return $res;
   }
 
