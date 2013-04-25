@@ -55,9 +55,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
           $word = $room->getWordName();
           if ($room->getState() == Room::STATE_IN_GAME) {
             if (strtolower(trim($event['event']['msg'])) == strtolower(trim($word))) {
-              $event = array('type'  => self::EVENT_SERVER,
-                             'event' => array('msg' => $player->getName().' found the word !'));
-              $topic->broadcast($event);
+              $this->launchServerEvent($player->getName().' found the word !');
               // set score
               // check if everybody found the word
               return;
@@ -66,12 +64,31 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
           break;
 
         case self::EVENT_SERVER :
-          break;
-
         case self::EVENT_ROOM :
+          $this->log('Event server and room forbidden', $player);
           break;
 
         case self::EVENT_DRAW :
+          $required = array('picture');
+          foreach($required as $key) {
+            if (!array_key_exists($key, $event['event'])) {
+              $this->log('Missing event key ('.$key.')', $player);
+              return;
+            }
+          }
+          if ($room->getState() != Room::STATE_IN_GAME) {
+            $this->log('Draw forbidden because room not in state "in game"', $player);
+            return;
+          }
+          if (!$room->isDrawer($player)) {
+            $this->log('Draw forbidden because player is not the drawer', $player);
+            return;
+          }
+          break;
+
+        default :
+          $this->log('Invalid event type ('.$event['type'].')', $player);
+          return;
           break;
       }
       $this->log('broadcast event');
@@ -182,9 +199,19 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
             if (! $this->assertRoomState(Room::STATE_DRAWER_CHOOSING, $room, $conn, $id, $topic)) return;
             $result['word'] = Words::getRandomWord($this->database, $params['category_id']);
             $result['result'] = 'ok';
-            $room = $player->getRoom();
             $room->setWord($result['word']['id'], $result['word']['name']);
             $conn->callResult($id, $result);
+            break;
+
+          case "launch_game":
+            if (! $this->assertPlayerInRoom($player, $conn, $id, $topic)) return;
+            if (! $this->assertPlayerIsAdmin($player, $conn, $id, $topic)) return;
+            $room = $player->getRoom();
+            if (! $this->assertRoomState(Room::STATE_WAITING_ROOM, $room, $conn, $id, $topic)) return;
+            $result['result'] = 'ok';
+            $room->setState(Room::STATE_DRAWER_CHOOSING);
+            $conn->callResult($id, $result);
+            $this->launchRoomEvent($room);
             break;
 
           default:
@@ -277,6 +304,15 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
       }
       return true;
     }
+    public function assertPlayerIsAdmin(Player $player, $conn, $id, $topic) {
+      $room = $player->getRoom();
+      if (!$room->isDrawer($player)) {
+        $this->log('Forbidden : the player is not the admin', $player);
+        $conn->callError($id, $topic, 'Forbidden : the player is not the admin');
+        return false;
+      }
+      return true;
+    }
     public function assertRoomState($room_state, Room $room, $conn, $id, $topic) {
       if ($room->getState() != $room_state) {
         $this->log('Forbidden : the room is not in state '.Room::$states[$state], $player);
@@ -329,7 +365,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
           unset($this->rooms[$room->getId()]);
           return;
         }
-        $this->launchServerEvent($room, $player->getName().' had left.');
+        $this->launchServerEvent($room, $player->getName().' has left.');
         $this->launchRoomEvent($room);
       }
     }

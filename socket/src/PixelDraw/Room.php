@@ -129,5 +129,8 @@ class Room {
   public function isDrawer(Player $player) {
     return $this->drawer_id == $player->getId();
   }
+  public function isAdmin(Player $player) {
+    return $this->admin_id == $player->getId();
+  }
 
 }
