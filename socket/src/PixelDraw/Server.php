@@ -155,8 +155,6 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
             }
             $player->joinRoom($room);
             $result['room'] = $room->asItemHash();
-            $result['players'] = $this->getPlayersAsHash($room);
-            $this->log($result);
             $result['result'] = 'ok';
             $conn->callResult($id, $result);
             $this->launchServerEvent($room, $player->getName().' join room.');
@@ -316,13 +314,6 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
       $this->log('Invalid room ('.$room_id.')');
       return null;
     }
-    public function getPlayersAsHash(Room $room) {
-      $players = array();
-      foreach ($room->getPlayers() as $player) {
-        $players[] = $player->asItemHash();
-      }
-      return $players;
-    }
 
     public function setDatabase($db) {
       $this->database = $db;
@@ -345,8 +336,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
 
     protected function launchRoomEvent(Room $room) {
       $event = array('type'  => self::EVENT_ROOM,
-                     'event' => array('room'    => $room->asItemHash(),
-                                      'players' => $this->getPlayersAsHash($room)));
+                     'event' => array('room'    => $room->asItemHash()));
       $this->log('launch room event');
       $this->broadcast($room, $event);
     }

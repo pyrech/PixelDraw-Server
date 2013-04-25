@@ -34,9 +34,17 @@ class Room {
     return array('id'           => $this->id,
                  'name'         => $this->name,
                  'state'        => $this->state,
+                 'players'      => $this->getPlayersAsHash(),
                  'count_player' => $this->countPlayers(),
                  'max_player'   => $this->max_player,
                  'admin_id'     => $this->admin_id);
+  }
+  public function getPlayersAsHash(Room $room) {
+    $players = array();
+    foreach ($this->players as $player) {
+      $players[] = $player->asItemHash();
+    }
+    return $players;
   }
 
   public function getPlayers() {
