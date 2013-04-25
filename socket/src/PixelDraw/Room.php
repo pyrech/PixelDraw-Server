@@ -21,6 +21,7 @@ class Room {
   private $drawer_id = 0;
   private $players = array();
   private $word_id = 0;
+  private $word_name = "";
 
   public function __construct($name, $player_id) {
     $this->id = uniqid('room-');
@@ -78,8 +79,13 @@ class Room {
     return $this->word_id;
   }
 
-  public function setWordId($word_id) {
+  public function getWordName() {
+    return $this->word_name;
+  }
+
+  public function setWord($word_id, $word_name) {
     $this->word_id = $word_id;
+    $this->word_name = $word_name;
   }
 
   public function geDrawerId() {
@@ -100,8 +106,6 @@ class Room {
   public function getState() {
     return $this->state;
   }
-
-
 
   public function toString() {
     $str = ''.$this->id;

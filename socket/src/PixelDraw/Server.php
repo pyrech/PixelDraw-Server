@@ -16,48 +16,66 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
     protected $players = array();
 
     public function onPublish(Conn $conn, $topic, $event, array $exclude, array $eligible) {
-        $this->log('onPublish '.$topic->getId(), $conn);
-        $player = $this->getCurrentPlayer($conn);
-        if (!$this->roomExists($topic->getId())) {
-          $this->log('Invalid topic ('.$topic->getId().')', $player);
-          //$conn->send('Invalid topic ('.$topic->getId().')');
+      $this->log('onPublish '.$topic->getId(), $conn);
+      $player = $this->getCurrentPlayer($conn);
+      if (!$this->roomExists($topic->getId())) {
+        $this->log('Invalid topic ('.$topic->getId().')', $player);
+        //$conn->send('Invalid topic ('.$topic->getId().')');
+        return;
+      }
+      $this->log($event);
+      $room = $this->getRoom($topic->getId());
+      if (!$player->isInRoom($room)) {
+        $this->log('Publish forbidden '.$room->toString(), $player);
+        //$conn->send('Publish forbidden'.$room->toString());
+        return;
+      }
+      if (!is_array($event)) {
+        $this->log('Invalid event data received. Should be a PHP array.', $player);
+        //$conn->send('Invalid event data received. You must send an object.');
+        return;
+      }
+      $required = array('type', 'event');
+      foreach($required as $key) {
+        if (!array_key_exists($key, $event)) {
+          $this->log('Missing data key ('.$key.')', $player);
           return;
         }
-        $this->log($event);
-        $room = $this->getRoom($topic->getId());
-        if (!$player->isInRoom($room)) {
-          $this->log('Publish forbidden '.$room->toString(), $player);
-          //$conn->send('Publish forbidden'.$room->toString());
-          return;
-        }
-        if (!is_array($event)) {
-          $this->log('Invalid event data received. Should be a PHP array.', $player);
-          //$conn->send('Invalid event data received. You must send an object.');
-          return;
-        }
-        $required = array('type', 'event');
-        foreach($required as $key) {
-          if (!array_key_exists($key, $event)) {
-            $this->log('Missing event key ('.$key.')', $player);
-            return;
+      }
+      switch($event['type']) {
+        case self::EVENT_PLAYER :
+          $required = array('msg');
+          foreach($required as $key) {
+            if (!array_key_exists($key, $event)) {
+              $this->log('Missing event key ('.$key.')', $player);
+              return;
+            }
           }
-        }
-        switch($event['type']) {
-          case self::EVENT_PLAYER :
-            $event['event']['msg'] = $event['event']['msg'] .' OK SERVEUR';
-            break;
+          $event['event']['player_id'] = $player->getId();
+          $word = $room->getWordName();
+          if ($room->getState() == Room:STATE_IN_GAME) {
+            if (strtolower(trim($event['event']['msg'])) == strtolower(trim($word))) {
+              $event = array('type'  => self::EVENT_SERVER,
+                             'event' => array('msg' => $player->getName().' found the word !'));
+              $topic->broadcast($event);
+              // set score
+              // check if everybody found the word
+              return;
+            }
+          }
+          break;
 
-          case self::EVENT_SERVER :
-            $event['event']['msg'] = $event['event']['msg'] .' OK SERVEUR';
-            break;
+        case self::EVENT_SERVER :
+          break;
 
-          case self::EVENT_ROOM :
-            break;
+        case self::EVENT_ROOM :
+          break;
 
-          case self::EVENT_DRAW :
-            break;
-        }
-        $topic->broadcast($event);
+        case self::EVENT_DRAW :
+          break;
+      }
+      $this->log('broadcast event');
+      $topic->broadcast($event);
     }
 
     public function onCall(Conn $conn, $id, $topic, array $params) {
@@ -69,7 +87,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
           case "login":
             $this->leaveCurrentRoom($player);
             if (! $this->assertParams($params, array('name'), $conn, $id, $topic)) return;
-            $this->log('login '.$player->getName().' -> '.$params['name']);
+            $this->log('Change login "'.$player->getName().'" to "'.$params['name'].'"');
             $player->setName($params['name']);
             $result['player'] = $player->asItemHash();
             $result['result'] = 'ok';
@@ -133,6 +151,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
             if (! $this->assertParams($params, array('room_id'), $conn, $id, $topic)) return;
             if (! $this->assertRoomExists($params['room_id'], $conn, $id, $topic)) return;
             $room = $this->getRoom($params['room_id']);
+            if (! $this->assertRoomState(Room::STATE_WAITING_ROOM, $room, $conn, $id, $topic)) return;
             if ($room->isFull()) {
               $this->log('Room full', $player);
               $conn->callError($id, $topic, 'Room full');
@@ -142,6 +161,9 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
             $result['room'] = $room->asItemHash();
             $result['result'] = 'ok';
             $conn->callResult($id, $result);
+            $this->launchServerEvent($room, $player->getName().' join room.');
+            $this->launchRoomEvent($room);
+            $this->broadcast($room, $event);
             break;
 
           case "leave_room":
@@ -166,7 +188,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
             $result['word'] = Words::getRandomWord($this->database, $params['category_id']);
             $result['result'] = 'ok';
             $room = $player->getRoom();
-            $room->setWordId($result['word']['id']);
+            $room->setWord($result['word']['id'], $result['word']['name']);
             $conn->callResult($id, $result);
             break;
 
@@ -193,7 +215,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
 
     // Socket connection
     public function onOpen(Conn $conn) {
-      $player = new Player($this->getCurrentPlayerId($conn));
+      $player = new Player($this->getCurrentPlayerId($conn), $conn);
       $this->players[$player->getId()] = $player;
       $this->log('onOpen', $player);
     }
@@ -305,10 +327,43 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
     // Leave a player from a room and update this player and room
     public function leaveCurrentRoom(Player $player) {
       $room = $player->getRoom();
-      $player->leaveRoom();
-      // If room empty, delete it
-      if ($room != null && $room->countPlayers() < 1) {
-        unset($this->rooms[$room->getId()]);
+      if ($room != null) {
+        $player->leaveRoom();
+        // If room empty, delete it
+        if ($room->countPlayers() < 1) {
+          unset($this->rooms[$room->getId()]);
+          return;
+        }
+        $this->launchServerEvent($room, $player->getName().' had left.');
+        $this->launchRoomEvent($room);
+      }
+    }
+
+    protected function launchRoomEvent(Room $room) {
+      $players = array();
+      foreach ($room->getPlayers() as $player) {
+        $players[] = $player->asItemHash();
+      }
+      $event = array('type'  => self::EVENT_ROOM,
+                     'event' => array('room'    => $room->asItemHash(),
+                                      'players' => $players));
+      $this->log('launch room event');
+      $this->broadcast($room, $event);
+    }
+
+    protected function launchServerEvent(Room $room, $msg) {
+      $event = array('type'  => self::EVENT_ROOM,
+                     'event' => array('msg' => $msg));
+      $this->log('launch server event ('.$msg.')');
+      $this->broadcast($room, $event);
+    }
+
+    protected function broadcast(Room $room, $event, Conn $exclude = null) {
+      foreach ($room->getPlayers() as $player) {
+        $client = $player->getConn();       
+        if ($client !== $exclude) {
+          $client->event($room->getId(), $event);
+        }
       }
     }
 

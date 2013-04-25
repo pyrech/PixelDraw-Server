@@ -9,10 +9,12 @@ class Player {
   private $name = "";
   private $score = 0;
   private $room = null;
+  private $conn = null;
 
-  public function __construct($id) {
+  public function __construct($id, $conn) {
     $this->id = $id;
     $this->name = 'guest_'.substr(''.$id, -8);
+    $this->conn = $conn;
   }
 
   public function getId() {
@@ -25,6 +27,10 @@ class Player {
 
   public function setName($name) {
     $this->name = $name;
+  }
+
+  public function getConn() {
+      return $this->conn;
   }
 
   public function getRoom() {
