@@ -141,7 +141,9 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
           case "get_room_list":
             $result['rooms'] = array();
             foreach ($this->rooms as $room) {
-              $result['rooms'][] = $room->asItemHash();
+              if ($room->getState() == Room::STATE_WAITING_ROOM) {
+                $result['rooms'][] = $room->asItemHash();
+              }
             }
             $result['result'] = 'ok';
             $conn->callResult($id, $result);
