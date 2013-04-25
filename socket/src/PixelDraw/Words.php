@@ -14,9 +14,8 @@ class Words {
 
   public static function collectCategories(\PDO $pdo, $limit) {
     if (empty(self::$query_collect)) {
-      self::$query_collect = $pdo->prepare('SELECT * FROM category LIMIT '.intval($limit).' ORDER BY RAND( )');
+      self::$query_collect = $pdo->prepare('SELECT * FROM category ORDER BY RAND() LIMIT '.intval($limit));
     }
-    error_log(var_export(self::$query_collect->queryString, true));
     self::$query_collect->execute();
     $res = array();
     foreach (self::$query_collect->fetchAll() as $row) {
@@ -28,7 +27,6 @@ class Words {
       }
       $res[] = $hash;
     }
-    error_log(var_export($res, true));
     return $res;
   }
 
@@ -43,7 +41,7 @@ class Words {
 
   public static function getRandomWord(\PDO $pdo, $category_id) {
     if (empty(self::$query_word)) {
-      self::$query_word = $pdo->prepare('SELECT * as count FROM word WHERE category_id = :category_id LIMIT 1 ORDER BY RAND( )');
+      self::$query_word = $pdo->prepare('SELECT * as count FROM word WHERE category_id = :category_id ORDER BY RAND() LIMIT 1');
     }
     self::$query_word->execute(array(':category_id' => intval($category_id)));
     $res = array();
@@ -52,7 +50,6 @@ class Words {
         $res[$key] = $value;
       }
     }
-    error_log(var_export($res, true));
     return $res;
   }
 
