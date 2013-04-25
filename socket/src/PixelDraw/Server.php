@@ -23,7 +23,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
           //$conn->send('Invalid topic ('.$topic->getId().')');
           return;
         }
-        var_dump($event);
+        $this->log($event);
         $room = $this->getRoom($topic->getId());
         if (!$player->isInRoom($room)) {
           $this->log('Publish forbidden '.$room->toString(), $player);
@@ -313,14 +313,18 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
     }
 
     public function log($msg, $player = null) {
-      $str = '['.date('d-m-Y H:i:s').'] ';
+      //$str = '['.date('d-m-Y H:i:s').'] ';
       if ($player instanceof Conn) {
         $player = $this->getCurrentPlayer($player);
       }
       if ($player instanceof Player) {
         $str .= 'Player '.$player->toString().' - ';
       }
-      echo $str, $msg, "\n";
+      if (!is_string($msg)) {
+        $msg = var_export($msg, true);
+      }
+      error_log($msg);
+      //echo $str, $msg, "\n";
     }
 
     // Mainly use for tests
