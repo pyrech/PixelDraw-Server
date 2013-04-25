@@ -63,7 +63,8 @@ class Room {
       unset($this->players[$player->getId()]);
     }
     if ($this->admin_id == $player->getId()) {
-      $this->admin_id = reset($this->players);
+      reset($this->players);
+      $this->admin_id = current($this->players)->getId();
     }
   }
 
