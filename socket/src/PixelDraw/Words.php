@@ -13,7 +13,7 @@ class Words {
     if (empty(self::$query_collect)) {
       self::$query_collect = $pdo->prepare('SELECT * FROM category LIMIT '.intval($limit).' ORDER BY RAND( )');
     }
-    self::$query_collect->exec();
+    self::$query_collect->execute();
     return self::$query_collect->fetch_all();
   }
 
@@ -21,7 +21,7 @@ class Words {
     if (empty(self::$query_exists)) {
       self::$query_exists = $pdo->prepare('SELECT COUNT(*) as count FROM category WHERE id = :id');
     }
-    self::$query_exists->exec(array(':id' => intval($category_id)));
+    self::$query_exists->execute(array(':id' => intval($category_id)));
     $res = self::$query_exists->fetch();
     return $res['count'] > 0;
   }
@@ -30,7 +30,7 @@ class Words {
     if (empty(self::$query_word)) {
       self::$query_word = $pdo->prepare('SELECT * as count FROM word WHERE category_id = :category_id LIMIT 1 ORDER BY RAND( )');
     }
-    self::$query_word->exec(array(':category_id' => intval($category_id)));
+    self::$query_word->execute(array(':category_id' => intval($category_id)));
     return self::$query_word->fetch();
   }
 
