@@ -163,7 +163,6 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
             $conn->callResult($id, $result);
             $this->launchServerEvent($room, $player->getName().' join room.');
             $this->launchRoomEvent($room);
-            $this->broadcast($room, $event);
             break;
 
           case "leave_room":
