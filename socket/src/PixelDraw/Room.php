@@ -23,7 +23,8 @@ class Room {
   private $word_id = 0;
   private $word_name = "";
   private $ended_at = 0;
-  private $nb_player_found = 0;
+
+  private $players_id_found = 0;
 
   public function __construct($name, $player_id) {
     $this->id = uniqid('room-');
@@ -120,9 +121,18 @@ class Room {
     $this->nb_player_found = 0;
   }
 
-  public function incrementFound() {
-    $this->nb_player_found++;
-    return $this->nb_player_found;
+  public function newFound(Player player) {
+    if (! $this->hasFound($player)) {
+      $this->players_id_found[] = $player->getId();
+    }
+  }
+
+  public function countFound() {
+    return count($this->players_id_found);
+  }
+
+  public function hasFound(Player $player) {
+    return in_array($player->getId(), $this->players_id_found);
   }
 
   public function setCategory($category_name) {

@@ -75,7 +75,12 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
               return;
             }
             if (strtolower(trim($event['event']['msg'])) == strtolower(trim($word))) {
-              $nb_found = $room->incrementFound();
+              if ($room->hasFound($player)) {
+                $this->log('Already found', $player);
+                return;
+              }
+              $room->newFound($player);
+              $nb_found = $room->countFound();
               $this->launchServerEvent($room, $player->getName().' found the word !');
               $score = self::$scores[count(self::$scores)];
               if ($nb_found < count(self::$scores)) {
