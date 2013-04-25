@@ -35,4 +35,5 @@ $server = IoServer::factory(
     ),
     8080
 );
+$pd_server->log('Ready to run');
 $server->run();
