@@ -138,7 +138,7 @@ class Room {
     $this->word_name = $word_name;
   }
 
-  public function geDrawerId() {
+  public function getDrawerId() {
     return $this->drawer_id;
   }
 

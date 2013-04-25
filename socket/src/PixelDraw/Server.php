@@ -71,6 +71,8 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
                 $score = self::$scores[$nb_found];
               }
               $player->incrementScore($score);
+              $drawer = $this->getPlayer($room->getDrawerId());
+              $drawer->incrementScore(1);
               // check if everybody found the word
               return;
             }
@@ -222,7 +224,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
             if (! $this->assertPlayerIsDrawer($player, $conn, $id, $topic)) return;
             $room = $player->getRoom();
             if (! $this->assertRoomState(Room::STATE_DRAWER_CHOOSING, $room, $conn, $id, $topic)) return;
-            $category = Words::getCategory($params['category_id']);
+            $category = Words::getCategory($this->database, $params['category_id']);
             $result['word'] = Words::getRandomWord($this->database, $params['category_id']);
             $result['result'] = 'ok';
             $room->setState(Room::STATE_IN_GAME);
