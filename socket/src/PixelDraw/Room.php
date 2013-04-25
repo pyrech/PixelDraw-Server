@@ -19,8 +19,10 @@ class Room {
   private $max_player = 5;
   private $drawer_id = 0;
   private $players = array();
+  private $category_name = 0;
   private $word_id = 0;
   private $word_name = "";
+  private $ended_at = 0;
 
   public function __construct($name, $player_id) {
     $this->id = uniqid('room-');
@@ -36,7 +38,8 @@ class Room {
                  'players'      => $this->getPlayersAsHash(),
                  'count_player' => $this->countPlayers(),
                  'max_player'   => $this->max_player,
-                 'drawer_id'    => $this->drawer_id);
+                 'drawer_id'    => $this->drawer_id,
+                 'ended_at'     => $this->ended_at);
   }
   public function getPlayersAsHash() {
     $players = array();
@@ -109,7 +112,16 @@ class Room {
     return $this->word_name;
   }
 
-  public function setWord($word_id, $word_name) {
+  public function setCategory($category_name) {
+    $this->category_name = $category_name;
+  }
+
+  public function setEndedAt($timestamp) {
+    $this->ended_at = $timestamp;
+  }
+
+  public function setWord($category_name, $word_id, $word_name) {
+    $this->word_id = $word_id;
     $this->word_id = $word_id;
     $this->word_name = $word_name;
   }

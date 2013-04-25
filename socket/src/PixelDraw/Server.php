@@ -6,10 +6,16 @@ use Ratchet\ConnectionInterface as Conn;
 
 class Server implements \Ratchet\Wamp\WampServerInterface {
 
+    const DRAW_DURATION = 60; // 60 sec
+
+    const PICTURE_SIZE = 256; // 16 * 16
+
     const EVENT_PLAYER = 0;
     const EVENT_SERVER = 1;
     const EVENT_ROOM   = 2;
     const EVENT_DRAW   = 3;
+
+    public static $scores = array();
 
     protected $database = null;
     protected $rooms = array();
@@ -84,6 +90,10 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
             $this->log('Draw forbidden because player is not the drawer', $player);
             return;
           }
+          if (count($event['event']['picture']) != self::PICTURE_SIZE) {
+            $this->log('Picture have not the good size('.self::PICTURE_SIZE.')', $player);
+            return;
+          }
           break;
 
         default :
@@ -99,7 +109,6 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
         $player = $this->getCurrentPlayer($conn);
         $result = array('method' => $topic->getId());
         $this->log('onCall '.$topic->getId(), $player);
-        //var_dump($params);
         switch($topic->getId()) {
           case "login":
             $this->leaveCurrentRoom($player);
@@ -195,6 +204,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
             $result['categories'] = Words::collectCategories($this->database, 3);
             $result['result'] = 'ok';
             $conn->callResult($id, $result);
+            $room->setCategory($result['categories']['name']);
             $this->launchRoomEvent($room);
             break;
 
@@ -209,6 +219,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
             $result['result'] = 'ok';
             $room->setWord($result['word']['id'], $result['word']['name']);
             $room->setState(Room::STATE_IN_GAME);
+            $room->setEndedAt(time()+self::DRAW_DURATION);
             $conn->callResult($id, $result);
             $this->launchServerEvent($room, 'The game starts');
             $this->launchRoomEvent($room);
