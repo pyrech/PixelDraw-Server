@@ -121,7 +121,7 @@ class Room {
     $this->nb_player_found = 0;
   }
 
-  public function newFound(Player player) {
+  public function newFound(Player $player) {
     if (! $this->hasFound($player)) {
       $this->players_id_found[] = $player->getId();
     }
