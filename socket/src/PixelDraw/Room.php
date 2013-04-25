@@ -124,7 +124,7 @@ class Room {
   }
 
   public function isFinished() {
-    return $thiS->finished;
+    return $this->finished;
   }
 
   public function setFinished() {
