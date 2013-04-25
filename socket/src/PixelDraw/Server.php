@@ -53,7 +53,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
           }
           $event['event']['player_id'] = $player->getId();
           $word = $room->getWordName();
-          if ($room->getState() == Room:STATE_IN_GAME) {
+          if ($room->getState() == Room::STATE_IN_GAME) {
             if (strtolower(trim($event['event']['msg'])) == strtolower(trim($word))) {
               $event = array('type'  => self::EVENT_SERVER,
                              'event' => array('msg' => $player->getName().' found the word !'));
