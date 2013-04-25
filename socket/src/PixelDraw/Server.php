@@ -56,7 +56,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
           if ($room->getState() == Room::STATE_IN_GAME) {
             if (strtolower(trim($event['event']['msg'])) == strtolower(trim($word))) {
               $this->launchServerEvent($player->getName().' found the word !');
-              // set score
+              $player->incrementScore();
               // check if everybody found the word
               return;
             }
@@ -305,7 +305,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
     public function assertRoomState($room_state, Room $room, $conn, $id, $topic) {
       if ($room->getState() != $room_state) {
         $this->log('Forbidden : the room is not in state "'.Room::$states[$room_state].'"', $player);
-        $conn->callError($id, $topic, 'Forbidden : the room is not in state "'.Room::$states[$state].'"');
+        $conn->callError($id, $topic, 'Forbidden : the room is not in state "'.Room::$states[$room_state].'"');
         return false;
       }
       return true;

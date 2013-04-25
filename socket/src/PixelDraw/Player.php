@@ -37,6 +37,10 @@ class Player {
       return $this->room;
   }
 
+  public function incrementScore($score) {
+    $this->score += intval($score);
+  }
+
   public function joinRoom(Room $room) {
     if ($room->isFull()) {
       return;
