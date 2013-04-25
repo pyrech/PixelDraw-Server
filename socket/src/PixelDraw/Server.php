@@ -188,7 +188,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
             if (! $this->assertPlayerInRoom($player, $conn, $id, $topic)) return;
             if (! $this->assertPlayerIsDrawer($player, $conn, $id, $topic)) return;
             $room = $player->getRoom();
-            //if (! $this->assertRoomState(Room::STATE_IN, $room, $conn, $id, $topic)) return;
+            if (! $this->assertRoomStateNot(Room::STATE_DRAWER_CHOOSING, $room, $conn, $id, $topic)) return;
             $room->setState(Room::STATE_DRAWER_CHOOSING);
             $result['categories'] = Words::collectCategories($this->database, 3);
             $result['result'] = 'ok';
@@ -206,17 +206,6 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
             $result['result'] = 'ok';
             $room->setWord($result['word']['id'], $result['word']['name']);
             $conn->callResult($id, $result);
-            break;
-
-          case "launch_game":
-            if (! $this->assertPlayerInRoom($player, $conn, $id, $topic)) return;
-            if (! $this->assertPlayerIsAdmin($player, $conn, $id, $topic)) return;
-            $room = $player->getRoom();
-            if (! $this->assertRoomState(Room::STATE_WAITING_ROOM, $room, $conn, $id, $topic)) return;
-            $result['result'] = 'ok';
-            $room->setState(Room::STATE_DRAWER_CHOOSING);
-            $conn->callResult($id, $result);
-            $this->launchRoomEvent($room);
             break;
 
           default:
@@ -313,6 +302,14 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
       if ($room->getState() != $room_state) {
         $this->log('Forbidden : the room is not in state "'.Room::$states[$room_state].'"', $player);
         $conn->callError($id, $topic, 'Forbidden : the room is not in state "'.Room::$states[$state].'"');
+        return false;
+      }
+      return true;
+    }
+    public function assertRoomStateNot($room_state, Room $room, $conn, $id, $topic) {
+      if ($room->getState() == $room_state) {
+        $this->log('Forbidden : the room is in state "'.Room::$states[$room_state].'"', $player);
+        $conn->callError($id, $topic, 'Forbidden : the room is in state "'.Room::$states[$state].'"');
         return false;
       }
       return true;
