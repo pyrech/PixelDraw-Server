@@ -6,7 +6,7 @@ use Ratchet\ConnectionInterface as Conn;
 
 class Server implements \Ratchet\Wamp\WampServerInterface {
 
-    const DRAW_DURATION = 20; // 60 sec
+    const DRAW_DURATION = 30; // 60 sec
 
     const PICTURE_SIZE = 256; // 16 * 16
 

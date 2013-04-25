@@ -35,14 +35,15 @@ class Room {
   }
 
   public function asItemHash() {
-    return array('id'           => $this->id,
-                 'name'         => $this->name,
-                 'state'        => $this->state,
-                 'players'      => $this->getPlayersAsHash(),
-                 'count_player' => $this->countPlayers(),
-                 'max_player'   => $this->max_player,
-                 'drawer_id'    => $this->drawer_id,
-                 'ended_at'     => $this->ended_at);
+    return array('id'            => $this->id,
+                 'name'          => $this->name,
+                 'state'         => $this->state,
+                 'players'       => $this->getPlayersAsHash(),
+                 'count_player'  => $this->countPlayers(),
+                 'max_player'    => $this->max_player,
+                 'drawer_id'     => $this->drawer_id,
+                 'category_name' => $this->category_name,
+                 'ended_at'      => $this->ended_at);
   }
   public function getPlayersAsHash() {
     $players = array();
@@ -65,7 +66,10 @@ class Room {
 
   public function removePlayer(Player $player) {
     if (array_key_exists($player->getId(), $this->players)) {
-      $this->nextDrawer();
+      if ($this->isDrawer($player)) {
+        $this->setFinished();
+        $this->nextDrawer();
+      }
       unset($this->players[$player->getId()]);
     }
   }
