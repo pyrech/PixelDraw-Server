@@ -156,6 +156,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
             $player->joinRoom($room);
             $result['room'] = $room->asItemHash();
             $result['players'] = $this->getPlayersAsHash($room);
+            $this->log($result):
             $result['result'] = 'ok';
             $conn->callResult($id, $result);
             $this->launchServerEvent($room, $player->getName().' join room.');
