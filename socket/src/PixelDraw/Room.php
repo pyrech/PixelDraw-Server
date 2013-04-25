@@ -17,7 +17,6 @@ class Room {
   private $name = "";
   private $state = 0;
   private $max_player = 5;
-  private $admin_id = 0;
   private $drawer_id = 0;
   private $players = array();
   private $word_id = 0;
@@ -26,7 +25,7 @@ class Room {
   public function __construct($name, $player_id) {
     $this->id = uniqid('room-');
     $this->name = $name;
-    $this->admin_id = $player_id;
+    $this->drawer_id = $player_id;
     $this->state = self::STATE_WAITING_ROOM;
   }
 
@@ -37,7 +36,7 @@ class Room {
                  'players'      => $this->getPlayersAsHash(),
                  'count_player' => $this->countPlayers(),
                  'max_player'   => $this->max_player,
-                 'admin_id'     => $this->admin_id);
+                 'drawer_id'    => $this->drawer_id);
   }
   public function getPlayersAsHash() {
     $players = array();
@@ -52,20 +51,38 @@ class Room {
   }
 
   public function addPlayer(Player $player) {
-    if (empty($this->admin_id)) {
-      $this->admin_id = $player->getId();
+    if (empty($this->drawer_id)) {
+      $this->drawer_id = $player->getId();
     }
     $this->players[$player->getId()] = $player;
   }
 
   public function removePlayer(Player $player) {
     if (array_key_exists($player->getId(), $this->players)) {
+      $this->nextDrawer();
       unset($this->players[$player->getId()]);
     }
-    if ($this->admin_id == $player->getId() && count($this->players) > 0) {
+  }
+
+  public function nextDrawer() {
+    $count = $this->countPlayers();
+    $drawer_id = 0;
+    if ($count == 1 || empty($this->drawer_id)) {
       reset($this->players);
-      $this->admin_id = current($this->players)->getId();
+      $drawer_id = current($this->players)->getId();
     }
+    else if ($count > 1) {
+      $players_id = array_keys($this->players);
+      $cur = array_search($this->drawer_id, $players_id);
+      if (empty($cur) || $cur == $count-1) {
+        reset($players_id);
+        $drawer_id = current($this->players)->getId();
+      }
+      else {
+        $drawer_id = $players_id[$cur+1];
+      }
+    }
+    $this->drawer_id = $drawer_id;
   }
 
   public function countPlayers() {
@@ -129,9 +146,6 @@ class Room {
   }
   public function isDrawer(Player $player) {
     return $this->drawer_id == $player->getId();
-  }
-  public function isAdmin(Player $player) {
-    return $this->admin_id == $player->getId();
   }
 
 }
