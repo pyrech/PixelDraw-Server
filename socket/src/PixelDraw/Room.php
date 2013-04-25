@@ -71,6 +71,7 @@ class Room {
         $this->nextDrawer();
       }
       unset($this->players[$player->getId()]);
+      $this->players = array_values($this->players); // reindex
     }
   }
 
