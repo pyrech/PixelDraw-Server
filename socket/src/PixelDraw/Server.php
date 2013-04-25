@@ -17,7 +17,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
 
     public static $scores = array(1 => 10,
                                   2 => 7,
-                                  3 => 5,
+                                  3 => 3,
                                   4 => 1);
 
     protected $database = null;
