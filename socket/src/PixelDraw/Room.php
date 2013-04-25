@@ -52,7 +52,7 @@ class Room {
   }
 
   public function addPlayer(Player $player) {
-    if ($this->admin_id == 0) {
+    if (empty($this->admin_id)) {
       $this->admin_id = $player->getId();
     }
     $this->players[$player->getId()] = $player;

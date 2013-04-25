@@ -116,7 +116,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
             if (! $this->assertParams($params, array('room_id'), $conn, $id, $topic)) return;
             if (! $this->assertRoomExists($params['room_id'], $conn, $id, $topic)) return;
             $room = $this->getRoom($params['room_id']);
-            $result['players'] = $this->getPlayersAsHash($room);
+            $result['players'] = $room->getPlayersAsHash();
             $result['result'] = 'ok';
             $conn->callResult($id, $result);
             break;
