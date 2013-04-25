@@ -81,7 +81,7 @@ class Player {
     if ($room_id instanceof Room) {
       $room_id = $room_id->getId();
     }
-    return $this->room->getId() == $room_id;
+    return $this->room && $this->room->getId() == $room_id;
   }
 
 }
