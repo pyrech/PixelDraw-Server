@@ -73,20 +73,17 @@ class Room {
   public function nextDrawer() {
     $count = $this->countPlayers();
     $drawer_id = 0;
-    if ($count == 1 || empty($this->drawer_id)) {
-      reset($this->players);
-      $drawer_id = current($this->players)->getId();
+    $players_id = array_keys($this->players);
+    $cur = array_search($this->drawer_id, $players_id);
+    if ($count < 2
+      || empty($this->drawer_id)
+      || empty($cur)
+      || $cur == $count-1) {
+      reset($players_id);
+      $drawer_id = current($players_id);
     }
-    else if ($count > 1) {
-      $players_id = array_keys($this->players);
-      $cur = array_search($this->drawer_id, $players_id);
-      if (empty($cur) || $cur == $count-1) {
-        reset($players_id);
-        $drawer_id = current($players_id);
-      }
-      else {
-        $drawer_id = $players_id[$cur+1];
-      }
+    else {
+      $drawer_id = $players_id[$cur+1];
     }
     $this->drawer_id = $drawer_id;
   }

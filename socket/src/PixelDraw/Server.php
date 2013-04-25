@@ -75,7 +75,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
               $this->log('Drawer can\'t send message', $player);
               return;
             }
-            if (strtolower(trim($event['event']['msg'])) == strtolower(trim($word))) {
+            if (!$room->isFinished() && strtolower(trim($event['event']['msg'])) == strtolower(trim($word))) {
               if ($room->hasFound($player)) {
                 $this->log('Already found', $player);
                 return;

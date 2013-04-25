@@ -50,6 +50,7 @@ class Player {
   }
 
   public function leaveRoom() {
+    $this->score == 0;
     if ($this->room != NULL) {
       $this->room->removePlayer($this);
       $this->room == NULL;
