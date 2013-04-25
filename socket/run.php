@@ -4,13 +4,10 @@ use Ratchet\Wamp\WampServer;
 use Ratchet\Server\IoServer;
 use Ratchet\WebSocket\WsServer;
 
-define('PD_SOCKET_ROOT', __DIR__);
-
+require __DIR__. '/conf/system.php';
 require PD_SOCKET_ROOT . '/conf/log.php';
 require PD_SOCKET_ROOT . '/conf/database.php';
 require PD_SOCKET_ROOT . '/vendor/autoload.php';
-
-system('tail -f '.PD_LOG_FILE);
 
 $pd_server = new PixelDraw\Server();
 
