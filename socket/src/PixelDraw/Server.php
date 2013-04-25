@@ -193,6 +193,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
             $result['categories'] = Words::collectCategories($this->database, 3);
             $result['result'] = 'ok';
             $conn->callResult($id, $result);
+            $this->launchRoomEvent($room);
             break;
 
           case "get_word":
@@ -205,7 +206,10 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
             $result['word'] = Words::getRandomWord($this->database, $params['category_id']);
             $result['result'] = 'ok';
             $room->setWord($result['word']['id'], $result['word']['name']);
+            $room->setState(Room::STATE_IN_GAME);
             $conn->callResult($id, $result);
+            $this->launchServerEvent($room, 'The game starts');
+            $this->launchRoomEvent($room);
             break;
 
           default:
