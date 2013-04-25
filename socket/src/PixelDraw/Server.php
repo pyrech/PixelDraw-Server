@@ -323,8 +323,9 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
       if (!is_string($msg)) {
         $msg = var_export($msg, true);
       }
-      error_log($msg);
-      //echo $str, $msg, "\n";
+      $str .= $msg;
+      error_log($str);
+      //echo $str, , "\n";
     }
 
     // Mainly use for tests
