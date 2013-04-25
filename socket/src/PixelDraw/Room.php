@@ -128,7 +128,7 @@ class Room {
   }
 
   public function setFinished() {
-    $thiS->finished = true;
+    $this->finished = true;
   }
 
   public function newFound(Player $player) {
