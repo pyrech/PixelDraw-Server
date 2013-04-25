@@ -129,6 +129,10 @@ class Room {
     $this->category_name = $category_name;
   }
 
+  public function getEndedAt() {
+    return $this->ended_at;
+  }
+
   public function setEndedAt($timestamp) {
     $this->ended_at = $timestamp;
   }

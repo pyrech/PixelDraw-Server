@@ -44,6 +44,13 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
         //$conn->send('Invalid event data received. You must send an object.');
         return;
       }
+
+      if ($room->getState() == Room::STATE_IN_GAME
+        && ($ended_at = $room->getEndedAt()) > 0
+        && time() >= $ended_at) {
+        $this->finishGame($room);
+      }
+
       $required = array('type', 'event');
       foreach($required as $key) {
         if (!array_key_exists($key, $event)) {
@@ -63,6 +70,10 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
           $event['event']['player_id'] = $player->getId();
           $word = $room->getWordName();
           if ($room->getState() == Room::STATE_IN_GAME) {
+            if ($room->isDrawer($player)) {
+              $this->log('Drawer can\'t send message', $player);
+              return;
+            }
             if (strtolower(trim($event['event']['msg'])) == strtolower(trim($word))) {
               $nb_found = $room->incrementFound();
               $this->launchServerEvent($room, $player->getName().' found the word !');
@@ -74,7 +85,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
               $drawer = $this->getPlayer($room->getDrawerId());
               $drawer->incrementScore(1);
               if ($nb_found == $room->countPlayers()) {
-                // game finished
+                $this->finishGame($room);
               }
               return;
             }
@@ -84,6 +95,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
         case self::EVENT_SERVER :
         case self::EVENT_ROOM :
           $this->log('Event server and room forbidden', $player);
+          return;
           break;
 
         case self::EVENT_DRAW :
@@ -113,6 +125,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
           return;
           break;
       }
+      $event['timestamp'] = time();
       $this->log('broadcast event');
       $topic->broadcast($event);
     }
@@ -211,7 +224,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
             if (! $this->assertPlayerInRoom($player, $conn, $id, $topic)) return;
             if (! $this->assertPlayerIsDrawer($player, $conn, $id, $topic)) return;
             $room = $player->getRoom();
-            if (! $this->assertRoomTwoPlayers($room, $conn, $id, $topic)) return;
+            //if (! $this->assertRoomTwoPlayers($room, $conn, $id, $topic)) return;
             if (! $this->assertRoomStateNot(Room::STATE_DRAWER_CHOOSING, $room, $conn, $id, $topic)) return;
             $room->setState(Room::STATE_DRAWER_CHOOSING);
             $result['categories'] = Words::collectCategories($this->database, 3);
@@ -401,6 +414,12 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
         $this->launchServerEvent($room, $player->getName().' has left.');
         $this->launchRoomEvent($room);
       }
+    }
+
+    protected function finishGame(Room $room) {
+        $room->nextDrawer();
+        $this->launchServerEvent($room, 'Game ends');
+        $this->launchRoomEvent($room);
     }
 
     protected function launchRoomEvent(Room $room) {
