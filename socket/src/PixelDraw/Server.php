@@ -47,7 +47,8 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
 
       if ($room->getState() == Room::STATE_IN_GAME
         && ($ended_at = $room->getEndedAt()) > 0
-        && time() >= $ended_at) {
+        && time() >= $ended_at
+        && !$room->isFinished()) {
         $this->finishGame($room);
       }
 
@@ -423,6 +424,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
 
     protected function finishGame(Room $room) {
         $room->nextDrawer();
+        $room->setFinished();
         $this->launchServerEvent($room, 'Game ends');
         $this->launchRoomEvent($room);
     }

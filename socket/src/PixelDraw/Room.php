@@ -25,6 +25,7 @@ class Room {
   private $ended_at = 0;
 
   private $players_id_found = 0;
+  private $finished = false;
 
   public function __construct($name, $player_id) {
     $this->id = uniqid('room-');
@@ -118,7 +119,16 @@ class Room {
     $this->setCategory($category_name);
     $this->setWord($word_id, $word_name);
     $this->setEndedAt($timestamp);
-    $this->nb_player_found = 0;
+    $this->players_id_found = array();
+    $this->finished = false;
+  }
+
+  public function isFinished() {
+    return $thiS->finished;
+  }
+
+  public function setFinished() {
+    $thiS->finished = true;
   }
 
   public function newFound(Player $player) {
