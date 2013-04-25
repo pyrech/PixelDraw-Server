@@ -73,7 +73,9 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
               $player->incrementScore($score);
               $drawer = $this->getPlayer($room->getDrawerId());
               $drawer->incrementScore(1);
-              // check if everybody found the word
+              if ($nb_found == $room->countPlayers()) {
+                // game finished
+              }
               return;
             }
           }
@@ -209,6 +211,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
             if (! $this->assertPlayerInRoom($player, $conn, $id, $topic)) return;
             if (! $this->assertPlayerIsDrawer($player, $conn, $id, $topic)) return;
             $room = $player->getRoom();
+            if (! $this->assertRoomTwoPlayers($room, $conn, $id, $topic)) return;
             if (! $this->assertRoomStateNot(Room::STATE_DRAWER_CHOOSING, $room, $conn, $id, $topic)) return;
             $room->setState(Room::STATE_DRAWER_CHOOSING);
             $result['categories'] = Words::collectCategories($this->database, 3);
@@ -326,6 +329,15 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
         return false;
       }
       return true;
+    }
+    public function assertRoomTwoPlayers(Room $room, $conn, $id, $topic) {
+      if ($room->countPlayers() < 2) {
+        $this->log('Forbidden : the game can\'t start. Need at less 2 players', $conn);
+        $conn->callError($id, $topic, 'Forbidden : the game can\'t start. Need at less 2 players');
+        return false;
+      }
+      return true;
+    }
     }
     public function assertRoomState($room_state, Room $room, $conn, $id, $topic) {
       if ($room->getState() != $room_state) {
