@@ -46,7 +46,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
         case self::EVENT_PLAYER :
           $required = array('msg');
           foreach($required as $key) {
-            if (!array_key_exists($key, $event)) {
+            if (!array_key_exists($key, $event['event'])) {
               $this->log('Missing event key ('.$key.')', $player);
               return;
             }
