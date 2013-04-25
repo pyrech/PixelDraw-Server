@@ -14,7 +14,7 @@ class Words {
       self::$query_collect = $pdo->prepare('SELECT * FROM category LIMIT '.intval($limit).' ORDER BY RAND( )');
     }
     self::$query_collect->execute();
-    return self::$query_collect->fetch_all();
+    return self::$query_collect->fetchAll();
   }
 
   public static function existsCategory(\PDO $pdo, $category_id) {
