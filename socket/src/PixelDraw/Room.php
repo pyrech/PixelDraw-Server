@@ -62,7 +62,7 @@ class Room {
     if (array_key_exists($player->getId(), $this->players)) {
       unset($this->players[$player->getId()]);
     }
-    if ($this->admin_id == $player->getId()) {
+    if ($this->admin_id == $player->getId() && count($this->players) > 0) {
       reset($this->players);
       $this->admin_id = current($this->players)->getId();
     }
