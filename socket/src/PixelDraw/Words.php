@@ -9,12 +9,26 @@ class Words {
   private static $query_exists = null;
   private static $query_word = null;
 
+  private static $category_fields = array('id', 'name');
+  private static $word_fields     = array('id', 'name', 'category_id');
+
   public static function collectCategories(\PDO $pdo, $limit) {
     if (empty(self::$query_collect)) {
       self::$query_collect = $pdo->prepare('SELECT * FROM category LIMIT '.intval($limit).' ORDER BY RAND( )');
     }
     self::$query_collect->execute();
-    return self::$query_collect->fetchAll();
+    $res = array();
+    foreach (self::$query_collect->fetchAll() as $row) {
+      $hash = array();
+      foreach ($row as $key => $value) {
+        if (in_array($key, self::$category_fields)) {
+          $hash[$key] = $value;
+        }
+      }
+      $res[] = $hash;
+    }
+    error_log(var_export($res));
+    return $res;
   }
 
   public static function existsCategory(\PDO $pdo, $category_id) {
@@ -31,7 +45,14 @@ class Words {
       self::$query_word = $pdo->prepare('SELECT * as count FROM word WHERE category_id = :category_id LIMIT 1 ORDER BY RAND( )');
     }
     self::$query_word->execute(array(':category_id' => intval($category_id)));
-    return self::$query_word->fetch();
+    $res = array();
+    foreach (self::$query_word->fetch() as $key => $value) {
+      if (in_array($key, self::$category_fields)) {
+        $res[$key] = $value;
+      }
+    }
+    error_log(var_export($res));
+    return $res;
   }
 
 }
