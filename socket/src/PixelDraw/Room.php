@@ -23,6 +23,7 @@ class Room {
   private $word_id = 0;
   private $word_name = "";
   private $ended_at = 0;
+  private $nb_player_found = 0;
 
   public function __construct($name, $player_id) {
     $this->id = uniqid('room-');
@@ -112,6 +113,18 @@ class Room {
     return $this->word_name;
   }
 
+  public function initialize($category_name, $word_id, $word_name, $timestamp) {
+    $this->setCategory($category_name);
+    $this->setWord($word_id, $word_name);
+    $this->setEndedAt($timestamp);
+    $this->nb_player_found = 0;
+  }
+
+  public function incrementFound() {
+    $this->nb_player_found++;
+    return $this->nb_player_found;
+  }
+
   public function setCategory($category_name) {
     $this->category_name = $category_name;
   }
@@ -120,8 +133,7 @@ class Room {
     $this->ended_at = $timestamp;
   }
 
-  public function setWord($category_name, $word_id, $word_name) {
-    $this->word_id = $word_id;
+  public function setWord($word_id, $word_name) {
     $this->word_id = $word_id;
     $this->word_name = $word_name;
   }

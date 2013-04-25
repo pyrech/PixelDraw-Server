@@ -15,7 +15,10 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
     const EVENT_ROOM   = 2;
     const EVENT_DRAW   = 3;
 
-    public static $scores = array(10, 7, 5, 1);
+    public static $scores = array(1 => 10,
+                                  2 => 7,
+                                  3 => 5,
+                                  4 => 1);
 
     protected $database = null;
     protected $rooms = array();
@@ -29,7 +32,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
         //$conn->send('Invalid topic ('.$topic->getId().')');
         return;
       }
-      $this->log($event);
+      //$this->log($event);
       $room = $this->getRoom($topic->getId());
       if (!$player->isInRoom($room)) {
         $this->log('Publish forbidden '.$room->toString(), $player);
@@ -61,8 +64,13 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
           $word = $room->getWordName();
           if ($room->getState() == Room::STATE_IN_GAME) {
             if (strtolower(trim($event['event']['msg'])) == strtolower(trim($word))) {
-              $this->launchServerEvent($player->getName().' found the word !');
-              $player->incrementScore();
+              $nb_found = $room->incrementFound();
+              $this->launchServerEvent($room, $player->getName().' found the word !');
+              $score = self::$scores[count(self::$scores)];
+              if ($nb_found < count(self::$scores)) {
+                $score = self::$scores[$nb_found];
+              }
+              $player->incrementScore($score);
               // check if everybody found the word
               return;
             }
@@ -217,10 +225,11 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
             $category = Words::getCategory($params['category_id']);
             $result['word'] = Words::getRandomWord($this->database, $params['category_id']);
             $result['result'] = 'ok';
-            $room->setWord($result['word']['id'], $result['word']['name']);
-            $room->setCategory($category['name']);
             $room->setState(Room::STATE_IN_GAME);
-            $room->setEndedAt(time()+self::DRAW_DURATION);
+            $room->initialize($category['name'],
+                              $result['word']['id'],
+                              $result['word']['name'],
+                              time()+self::DRAW_DURATION);
             $conn->callResult($id, $result);
             $this->launchServerEvent($room, 'The game starts');
             $this->launchRoomEvent($room);
