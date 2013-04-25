@@ -326,7 +326,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
     public function assertRoomStateNot($room_state, Room $room, $conn, $id, $topic) {
       if ($room->getState() == $room_state) {
         $this->log('Forbidden : the room is in state "'.Room::$states[$room_state].'"', $player);
-        $conn->callError($id, $topic, 'Forbidden : the room is in state "'.Room::$states[$state].'"');
+        $conn->callError($id, $topic, 'Forbidden : the room is in state "'.Room::$states[$room_state].'"');
         return false;
       }
       return true;
