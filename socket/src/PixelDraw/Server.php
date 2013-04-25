@@ -6,7 +6,7 @@ use Ratchet\ConnectionInterface as Conn;
 
 class Server implements \Ratchet\Wamp\WampServerInterface {
 
-    const DRAW_DURATION = 30; // 60 sec
+    const DRAW_DURATION = 60; // 60 sec
 
     const PICTURE_SIZE = 256; // 16 * 16
 
@@ -90,7 +90,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
               $player->incrementScore($score);
               $drawer = $this->getPlayer($room->getDrawerId());
               $drawer->incrementScore(1);
-              if ($nb_found == $room->countPlayers()) {
+              if ($nb_found == ($room->countPlayers()-1)) {
                 $this->finishGame($room);
               }
               return;
