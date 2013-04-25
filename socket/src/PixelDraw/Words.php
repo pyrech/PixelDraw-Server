@@ -41,12 +41,12 @@ class Words {
 
   public static function getRandomWord(\PDO $pdo, $category_id) {
     if (empty(self::$query_word)) {
-      self::$query_word = $pdo->prepare('SELECT * as count FROM word WHERE category_id = :category_id ORDER BY RAND() LIMIT 1');
+      self::$query_word = $pdo->prepare('SELECT * FROM word WHERE category_id = :category_id ORDER BY RAND() LIMIT 1');
     }
     self::$query_word->execute(array(':category_id' => intval($category_id)));
     $res = array();
     foreach (self::$query_word->fetch() as $key => $value) {
-      if (in_array($key, self::$category_fields)) {
+      if (in_array($key, self::$word_fields)) {
         $res[$key] = $value;
       }
     }
