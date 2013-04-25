@@ -313,7 +313,7 @@ class Server implements \Ratchet\Wamp\WampServerInterface {
     }
 
     public function log($msg, $player = null) {
-      //$str = '['.date('d-m-Y H:i:s').'] ';
+      $str = '';
       if ($player instanceof Conn) {
         $player = $this->getCurrentPlayer($player);
       }
