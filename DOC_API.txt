@@ -1,0 +1,196 @@
+API PixelDraw
+
+1) Structures
+
+When a user open a socket to the server ws://88.191.157.29, a player with a unique ID is associated to the connection. A default name like “guest_xxxxxxxx” is attributed and the player is not connected to any room.
+When the socket is closed, the player is disconnected to his current room (if connected) and is destroyed from the server.
+
+The api can send or receive different kind of type :
+  string,
+	int,
+	Player
+an object which the structure is :
+		{
+			string id,
+			string name,
+			int score,
+			string room_id // Current room’s id if the player has joined the room, 0 else
+		},
+	Room
+an object which the structure is :
+		{
+			string id,
+			string name,
+      int state,
+        // 1: waiting room
+        // 2: drawer choosing category and word
+        // 3: in game
+			Player[] players,
+			int count_player, // Number of players in the room
+			int max_player, // The maximum number of player who can join this room
+			string drawer_id, // The player_id of the player who are going to draw	
+			string category_name // the name of the current category
+			long ended_at // the timestamp when the game finished
+    }
+	Category
+an object which the structure is :
+		{
+			int id,
+			string name
+		},
+	Word
+an object which the structure is :
+		{
+			int id,
+			string name,
+			int category_id,
+		},
+	Event
+In PubSub mode, the event sent is an object which this structure :
+    {
+			int type, // identifyer
+      GameEvent event,
+    	// type:
+      // 0: GamePlayerEvent {player_id:String, msg:String}
+      // 1: GameServerEvent{message: String}
+      // 2: GameRoomEvent{room: Room}
+      // 3: GameDrawEvent{picture:[Pixel} (avec Pixel = Int (RGBA))
+      int timestamp
+		}
+    The type allows to know which kind of event and how to unserialize the event value
+
+
+2) Methods RPC available
+By default all the method return the method called with the key method.
+
+  login
+    parameters :	string name
+  
+  	errors :		  if name was not specified
+  
+  	events :	    Server event // if player was in a room
+                  Room event // if player was in a room
+  
+  	return : 	    Player player
+  
+  This method disconnect the player from a room if he is currently in one. Change the name of the player to name. This method should be called when the player open his client if he want to use a custom name.
+  
+  get_info_player
+  	parameters :	string player_id
+  
+  	errors :	  	if player_id was not specified,
+  		          	if no player exists with the id player_id
+  
+  	events :    	none
+  
+  	return :    	Player player
+  
+  Return some info about the player with the id player_id.
+  
+  get_info_room
+  	parameters :	string room_id
+  
+  	errors :	    if room_id was not specified,
+  		          	if no room exists with the id room_id
+  
+  	events :    	none
+  
+  	return : 	    Room room
+  
+  Return some info about the room with the id room_id.
+  
+  get_room_players
+  	parameters :	string room_id
+  
+  	errors :		  if room_id was not specified,
+  			          if no room exists with the id room_id
+  
+  	events :	    none
+  
+  	return :    	Room[] rooms
+  
+  Return the array of the players in the room.
+  
+  get_room_list
+  	parameters :	none
+  
+  	errors :    	none
+  
+  	events :	    none
+  
+  	return : 	    Room[] rooms
+  
+  Return an array of all available rooms.
+  
+  create_room
+  	parameters :	string room_name
+  
+  	errors :		  if room_name was not specified
+  
+  	events :	    Server event // if player was in a room
+                  Room event // if player was in a room
+  
+  	return : 	    Room room
+  
+  This method disconnect the player from a room if he is currently in one. This method create a new room with a unique id and the name room_name. The player joins automatically the room and become the admin of the room.
+  
+  join_room
+  	parameters :	string room_id
+  
+  	errors :		  if room_id was not specified,
+  			          if no room exists with the id room_id,
+  			          if the room is already full,
+  			          if the room is not in state “wainting room”
+  
+  	events :	    Server event // if player was in a room
+                  Room event // if player was in a room
+                  Server event // new player
+                  Room event // new player
+  
+  	return : 	    Room room
+  
+  This method disconnect the player from a room if he is currently in one. This method allow a player to join a room. If no admin is specified for the room (room created by default), the player become admin.
+  
+  leave_room
+  	parameters :	string room_id
+  
+  	errors :		  if room_id was not specified,
+  			          if no room exists with the id room_id
+  
+  	events :	    Server event // if player was in a room
+                  Room event // if player was in a room
+  
+  	return : 	    Room room
+  
+  This method disconnect the player from a room if he is currently in one. If the player was the admin of the room, the next player who joined the room after the admin becomes the new admin. If the room is now empty, it’s destroyed.
+  
+  get_categories
+  	parameters :	none
+  
+  	errors :	  	if the player is not in a room,
+  			          if the player is not the drawer,
+  			          if the room has less than 2 players,
+  			          if the room is in state “drawer choosing”
+  
+  	events :	    Room event // room in state “drawer choosing”
+  
+  	return :      Category[] categories
+  
+  Set the room’s state at “drawer choosing”. Return an array of categories to allow the drawer to choose a category.
+  
+  get_word
+  	parameters :	int category_id
+  
+  	errors :		if category_id was not specified,
+  			        if no category exists with the id category_id,
+  			        if the player is not in a room,
+  			        if the player is not the drawer,
+  			        if the room is not in state “drawer choosing”
+  
+  	events :	  Server event // room in state “in game”
+                Room event // room in state “in game”
+  
+  	return : 	Word word
+  
+  Return a word that the player should draw. This method associate a word to the room.
+
